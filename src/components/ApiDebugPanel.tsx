@@ -91,9 +91,7 @@ export const ApiDebugPanel: React.FC = () => {
           </Button>
           <Button
             variant="outline"
-            onClick={() =>
-              handleQuickTest("/api/grammar/mini-test/questions", 6)
-            }
+            onClick={() => handleQuickTest("/grammar/mini-test/questions", 6)}
             size="sm"
           >
             Test with /api prefix

@@ -252,7 +252,7 @@ export function AdminTestDetailModal({
         Authorization: `Bearer ${token}`,
       };
 
-      const apiUrl = `/api/grammar/mini-test/questions?lesson_id=${test.lessonId}`;
+      const apiUrl = `/grammar/mini-test/questions?lesson_id=${test.lessonId}`;
 
       const response = await apiClient.get(apiUrl);
 

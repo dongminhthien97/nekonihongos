@@ -392,11 +392,7 @@ export function MiniTestModal({
   };
 
   // --- HANDLERS ---
-  const handleAnswerChange = (
-    qId: number,
-    index: number,
-    value: string,
-  ) => {
+  const handleAnswerChange = (qId: number, index: number, value: string) => {
     setAnswers((prev) => {
       const currentQuestionAnswers = { ...(prev[qId] || {}) };
       return {
@@ -659,7 +655,9 @@ export function MiniTestModal({
                 });
               }
 
-              const uniqueIndex = parseInt(`${question.id}${lineIdx}${blankCount}`);
+              const uniqueIndex = parseInt(
+                `${question.id}${lineIdx}${blankCount}`,
+              );
 
               parts.push({
                 type: "input",
@@ -765,7 +763,9 @@ export function MiniTestModal({
                 );
               }
 
-              const uniqueChoiceIndex = parseInt(`${question.id}${lineIdx}${choiceIndex}`);
+              const uniqueChoiceIndex = parseInt(
+                `${question.id}${lineIdx}${choiceIndex}`,
+              );
               const currentVal = answers[question.id]?.[uniqueChoiceIndex];
 
               elements.push(
@@ -933,9 +933,7 @@ export function MiniTestModal({
                           {q.example && (
                             <div className="example-section">
                               <p className="example-label">Ví dụ (Rei)</p>
-                              <div className="example-content">
-                                {q.example}
-                              </div>
+                              <div className="example-content">{q.example}</div>
                             </div>
                           )}
 
