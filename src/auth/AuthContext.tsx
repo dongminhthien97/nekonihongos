@@ -71,6 +71,16 @@ const normalizeUser = (backendUser: any): User => ({
   exerciseProgress: backendUser.exerciseProgress || 0,
 });
 
+const mapLoginResponse = (raw: any) => {
+  console.log("LOGIN RAW RESPONSE", raw);
+
+  const token = raw.token;
+  const refreshToken = raw.refreshToken;
+  const user = normalizeUser(raw.user || raw);
+
+  return { token, refreshToken, user };
+};
+
 export const AuthProvider = ({
   children,
   onNavigate,
@@ -128,15 +138,15 @@ export const AuthProvider = ({
       const res = await api.post(
         "/auth/login",
         { email, password },
-        { headers: { "Content-Type": "application/json" } }
+        { headers: { "Content-Type": "application/json" } },
       );
 
-      const data = res.data;
-      if (!data?.token) return false;
+      const mapped = mapLoginResponse(res.data);
+      if (!mapped.token) return false;
 
-      tokenStorage.set(data.token);
-      if (data.refreshToken) {
-        refreshTokenStorage.set(data.refreshToken);
+      tokenStorage.set(mapped.token);
+      if (mapped.refreshToken) {
+        refreshTokenStorage.set(mapped.refreshToken);
       }
 
       await loadUserFromBackend();
@@ -182,7 +192,7 @@ export const AuthProvider = ({
       markSplashAsSeen,
       onNavigate,
     }),
-    [user, loading, hasSeenSplash, onNavigate]
+    [user, loading, hasSeenSplash, onNavigate],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
