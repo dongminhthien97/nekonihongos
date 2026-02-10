@@ -33,6 +33,46 @@ interface KanjiLesson {
   kanjiList: Kanji[];
 }
 
+// Backend API response types
+interface BackendKanjiLesson {
+  lessonId: number;
+  lessonTitle: string;
+  icon: string;
+  kanji: Kanji[];
+}
+
+interface BackendKanji {
+  kanji: string;
+  on: string;
+  kun: string;
+  hanViet: string;
+  meaning: string;
+  strokes: number;
+  svgPaths: string[];
+  compounds: KanjiCompound[];
+}
+
+// Mapping functions
+const normalizeKanji = (backendKanji: BackendKanji): Kanji => ({
+  kanji: backendKanji.kanji || "",
+  on: backendKanji.on || "",
+  kun: backendKanji.kun || "",
+  hanViet: backendKanji.hanViet || "",
+  meaning: backendKanji.meaning || "",
+  strokes: backendKanji.strokes || 0,
+  svgPaths: backendKanji.svgPaths || [],
+  compounds: backendKanji.compounds || [],
+});
+
+const normalizeKanjiLesson = (
+  backendLesson: BackendKanjiLesson,
+): KanjiLesson => ({
+  id: backendLesson.lessonId,
+  title: backendLesson.lessonTitle,
+  icon: backendLesson.icon || "",
+  kanjiList: (backendLesson.kanji || []).map(normalizeKanji),
+});
+
 export function KanjiPage({
   onNavigate,
 }: {
@@ -55,8 +95,12 @@ export function KanjiPage({
       try {
         setIsLoading(true);
         const res = await api.get("/kanji/lessons");
-        const serverLessons: KanjiLesson[] = res.data.data || [];
-        setLessons(serverLessons);
+
+        // Map backend response to frontend domain model
+        const backendLessons: BackendKanjiLesson[] = res.data.data || [];
+        const normalizedLessons = backendLessons.map(normalizeKanjiLesson);
+
+        setLessons(normalizedLessons);
         setError("");
       } catch (err: any) {
         console.error("❁ELỗi khi tải Kanji:", err);
