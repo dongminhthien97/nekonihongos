@@ -693,9 +693,6 @@ export function MiniTestModal({
                         e.target.value,
                       )
                     }
-                    className="blank-input-field blank-textarea-field"
-                    placeholder="Nhập câu trả lời..."
-                    rows={2}
                   />
                 </div>
               );
