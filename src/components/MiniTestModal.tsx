@@ -634,6 +634,8 @@ export function MiniTestModal({
       <div className="question-content-container">
         {lines.map((line, lineIdx) => {
           if (question.question_type === "fill_blank") {
+            // FIX: Chỉ tìm các ô trống thực sự (không bao gồm phần "rei" đã được tách riêng)
+            // Regex tìm các ô trống dạng: （　）, （ ）, ＿＿, ___, 【 】, [ ]
             const blankRegex = /（\s*）|＿{2,}|_{2,}|【\s*】|\[ \]|___+/g;
 
             const parts: Array<
@@ -676,24 +678,12 @@ export function MiniTestModal({
               });
             }
 
-            if (!parts.some((part) => part.type === "input")) {
-              const fallbackKey = parseInt(`${question.id}${lineIdx}0`);
+            // FIX: Chỉ hiển thị input nếu có ô trống thực sự
+            // Nếu không có ô trống, chỉ hiển thị text bình thường
+            if (blankCount === 0) {
               return (
-                <div
-                  key={lineIdx}
-                  className="fill-blank-line fill-blank-fallback"
-                >
-                  <div>{renderWithFurigana(line)}</div>
-                  <textarea
-                    value={answers[question.id]?.[fallbackKey] || ""}
-                    onChange={(e) =>
-                      handleAnswerChange(
-                        question.id,
-                        fallbackKey,
-                        e.target.value,
-                      )
-                    }
-                  />
+                <div key={lineIdx} className="fill-blank-line">
+                  {renderWithFurigana(line)}
                 </div>
               );
             }
@@ -913,7 +903,7 @@ export function MiniTestModal({
                               <p className="hint-title">Hướng dẫn</p>
                               <p>
                                 {q.question_type === "fill_blank"
-                                  ? "Điền từ thích hợp vào ô trống."
+                                  ? "Điền từ thích hợp vào ô trống (dấu ngoặc tròn: （　）)."
                                   : q.question_type === "multiple_choice"
                                     ? "Chọn đáp án đúng trong các ngoặc."
                                     : q.question_type === "rearrange" ||
@@ -930,7 +920,17 @@ export function MiniTestModal({
                           {q.example && (
                             <div className="example-section">
                               <p className="example-label">Ví dụ (Rei)</p>
-                              <div className="example-content">{q.example}</div>
+                              <div className="example-content">
+                                {renderWithFurigana(q.example)}
+                              </div>
+                              <p className="example-note">
+                                <small>
+                                  <i>
+                                    ※ Phần ví dụ chỉ để tham khảo, không cần
+                                    điền vào ô trống
+                                  </i>
+                                </small>
+                              </p>
                             </div>
                           )}
 
@@ -1374,6 +1374,12 @@ export function MiniTestModal({
             font-weight: 500;
           }
           
+          .example-note {
+            margin-top: 0.5rem;
+            color: #6b7280;
+            font-size: 0.875rem;
+          }
+          
           .main-question-content {
             position: relative;
           }
@@ -1418,22 +1424,6 @@ export function MiniTestModal({
           
           .blank-input-field::placeholder {
             color: #c4b5fd;
-          }
-
-          .fill-blank-fallback {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.75rem;
-            line-height: 1.75rem;
-          }
-
-          .blank-textarea-field {
-            width: 100%;
-            min-height: 5.5rem;
-            text-align: left;
-            padding: 0.75rem;
-            resize: vertical;
           }
           
           .choice-container {
