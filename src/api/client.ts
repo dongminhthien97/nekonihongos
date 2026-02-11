@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from "axios";
-import { isApiError } from "../types/api";
+import { isApiError, type ApiError } from "../types/api";
 import { tokenStorage } from "../auth/storage";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";

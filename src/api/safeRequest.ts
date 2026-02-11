@@ -66,7 +66,7 @@ export async function safeRequest<T>(
   await waitForBackendReady();
 
   const maxRetries = 3;
-  let lastError: Error;
+  let lastError: Error | null = null;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -135,7 +135,11 @@ export async function safeRequest<T>(
     }
   }
 
-  throw lastError;
+  if (lastError) {
+    throw lastError;
+  }
+
+  throw new Error("Request failed with unknown error");
 }
 
 /**
