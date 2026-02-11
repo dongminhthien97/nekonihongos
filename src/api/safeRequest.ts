@@ -1,6 +1,6 @@
 import axios, { type AxiosRequestConfig, type CancelToken } from "axios";
 import { isApiResponse, type ApiResponse, type ApiError } from "../types/api";
-import { tokenStorage } from "../lib/api";
+import { tokenStorage } from "../auth/storage";
 
 // Backend readiness state
 let backendReady = false;
@@ -71,7 +71,7 @@ export async function safeRequest<T>(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       // Add auth token if available
-      const token = tokenStorage.getAccessToken();
+      const token = tokenStorage.get();
       if (token) {
         config.headers = {
           ...config.headers,
@@ -142,7 +142,7 @@ export async function safeRequest<T>(
  * Handle 401 errors by clearing tokens and redirecting to login
  */
 export function handleAuthError() {
-  tokenStorage.clearTokens();
+  tokenStorage.clear();
   localStorage.removeItem("nekoUser");
   
   // Redirect to login page

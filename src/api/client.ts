@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from "axios";
 import { isApiError } from "../types/api";
-import { tokenStorage } from "../lib/api";
+import { tokenStorage } from "../auth/storage";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -17,7 +17,7 @@ const api: AxiosInstance = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = tokenStorage.getAccessToken();
+    const token = tokenStorage.get();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
