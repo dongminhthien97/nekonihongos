@@ -171,7 +171,7 @@ export function KanjiPage({
             "⏰ [KanjiPage] Timeout error - Máy chủ không phản hồi trong 15s",
           );
           setError(
-            "Mèo không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại sau!",
+            "Mèo không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại sau!!",
           );
         } else if (err.isNetworkError) {
           console.error(
