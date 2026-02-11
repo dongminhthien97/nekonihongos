@@ -5,6 +5,7 @@ import { KanjiDetailModal } from "./KanjiDetailModal";
 import { NekoLoading } from "./NekoLoading";
 import api from "../api/axios";
 import { NekoAlertModal } from "./NekoAlertModal";
+import { tokenStorage } from "../auth/storage";
 
 const LESSONS_PER_PAGE = 12;
 const KANJI_PER_PAGE = 12;
@@ -38,25 +39,25 @@ interface BackendKanjiLesson {
   lessonId: number;
   lessonTitle: string;
   icon: string;
-  kanji: Kanji[];
+  kanji: BackendKanji[];
 }
 
 interface BackendKanji {
   kanji: string;
-  on: string;
-  kun: string;
+  onReading: string;
+  kunReading: string;
   hanViet: string;
   meaning: string;
   strokes: number;
-  svgPaths: string[];
-  compounds: KanjiCompound[];
+  svgPaths?: string[]; // Optional - may not be present in backend
+  compounds?: KanjiCompound[]; // Optional - may not be present in backend
 }
 
 // Mapping functions
 const normalizeKanji = (backendKanji: BackendKanji): Kanji => ({
   kanji: backendKanji.kanji || "",
-  on: backendKanji.on || "",
-  kun: backendKanji.kun || "",
+  on: backendKanji.onReading || "",
+  kun: backendKanji.kunReading || "",
   hanViet: backendKanji.hanViet || "",
   meaning: backendKanji.meaning || "",
   strokes: backendKanji.strokes || 0,
@@ -93,23 +94,64 @@ export function KanjiPage({
   useEffect(() => {
     const fetchKanjiLessons = async () => {
       try {
+        console.log("🔍 [KanjiPage] Bắt đầu fetchKanjiLessons");
+        console.log("🔍 [KanjiPage] API URL:", import.meta.env.VITE_API_URL);
+        console.log(
+          "🔍 [KanjiPage] Token:",
+          tokenStorage.get() ? "Có token" : "Không có token",
+        );
+
         setIsLoading(true);
+
+        console.log("🔍 [KanjiPage] Gọi API: GET /kanji/lessons");
+        const startTime = Date.now();
         const res = await api.get("/kanji/lessons");
+        const endTime = Date.now();
+
+        console.log(
+          "✅ [KanjiPage] API call thành công trong",
+          endTime - startTime,
+          "ms",
+        );
+        console.log("🔍 [KanjiPage] Full response:", res);
+        console.log("🔍 [KanjiPage] Response status:", res.status);
+        console.log("🔍 [KanjiPage] Response headers:", res.headers);
+        console.log("🔍 [KanjiPage] Response data:", res.data);
 
         // Map backend response to frontend domain model
         const backendLessons: BackendKanjiLesson[] = res.data.data || [];
-        console.log("API Response:", res.data);
-        console.log("Backend Lessons:", backendLessons);
+        console.log("🔍 [KanjiPage] Backend Lessons raw:", backendLessons);
+        console.log(
+          "🔍 [KanjiPage] Số lượng bài học nhận được:",
+          backendLessons.length,
+        );
+
+        if (backendLessons.length === 0) {
+          console.warn("⚠️ [KanjiPage] Backend trả về 0 bài học");
+        }
 
         const normalizedLessons = backendLessons.map(normalizeKanjiLesson);
-        console.log("Normalized Lessons:", normalizedLessons);
+        console.log("🔍 [KanjiPage] Normalized Lessons:", normalizedLessons);
+        console.log(
+          "🔍 [KanjiPage] Số lượng bài học sau normalize:",
+          normalizedLessons.length,
+        );
 
         setLessons(normalizedLessons);
         setError("");
+
+        console.log("✅ [KanjiPage] fetchKanjiLessons hoàn thành thành công");
       } catch (err: any) {
-        console.error("❁ELỗi khi tải Kanji:", err);
+        console.error("❌ [KanjiPage] Lỗi trong fetchKanjiLessons:", err);
+        console.error("❌ [KanjiPage] Error type:", err.constructor.name);
+        console.error("❌ [KanjiPage] Error code:", err.code);
+        console.error("❌ [KanjiPage] Error message:", err.message);
+        console.error("❌ [KanjiPage] Error config:", err.config);
+        console.error("❌ [KanjiPage] Error response:", err.response);
+        console.error("❌ [KanjiPage] Error request:", err.request);
 
         if (err.response?.status === 401) {
+          console.log("🔐 [KanjiPage] Phát hiện lỗi 401 - Token hết hạn");
           alert("Phiên đăng nhập hết hạn! Mèo đưa bạn về trang đăng nhập nhé");
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
@@ -118,8 +160,32 @@ export function KanjiPage({
           return;
         }
 
-        setError("Không thể tải dữ liệu Kanji. Mèo đang cố gắng...");
+        // Handle network errors and timeouts
+        if (err.code === "ECONNABORTED" || err.message?.includes("timeout")) {
+          console.error(
+            "⏰ [KanjiPage] Timeout error - Máy chủ không phản hồi trong 15s",
+          );
+          setError(
+            "Mèo không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại sau!",
+          );
+        } else if (err.code === "ERR_NETWORK" || !err.response) {
+          console.error(
+            "🌐 [KanjiPage] Network error - Không thể kết nối tới server",
+          );
+          setError(
+            "Mèo không thể kết nối tới máy chủ. Máy chủ có thể đang bảo trì hoặc không hoạt động!",
+          );
+        } else {
+          console.error(
+            "❓ [KanjiPage] Lỗi không xác định:",
+            err.response?.status,
+          );
+          setError("Không thể tải dữ liệu Kanji. Mèo đang cố gắng...");
+        }
       } finally {
+        console.log(
+          "🏁 [KanjiPage] fetchKanjiLessons kết thúc, set isLoading = false",
+        );
         setTimeout(() => setIsLoading(false), 600);
       }
     };
