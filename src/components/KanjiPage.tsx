@@ -124,7 +124,7 @@ export function KanjiPage({
   }, [onNavigate]);
 
   const handleStartFlashcardKanji = () => {
-    if (!selectedLesson || selectedLesson.kanjiList.length === 0) {
+    if (!selectedLesson) {
       setShowNoLessonModal(true);
       return;
     }
