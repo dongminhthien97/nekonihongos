@@ -1,7 +1,7 @@
 // src/pages/JlptGrammar.tsx
 import { useState, useEffect } from "react";
 import { NekoLoading } from "./NekoLoading";
-import api from "../api/axios";
+import { safeRequest } from "../api/safeRequest";
 import toast from "react-hot-toast";
 
 interface GrammarPattern {
@@ -30,50 +30,37 @@ export function JlptGrammar({ level, onNavigate }: JlptGrammarProps) {
     const fetchGrammar = async () => {
       try {
         // SỬA: Gọi đúng API endpoint mới với /api/grammar/jlpt/{level}
-        const res = await api.get(`/grammar/jlpt/${levelUpper}`);
+        const data = await safeRequest<GrammarPattern[]>({
+          url: `/grammar/jlpt/${levelUpper}`,
+          method: "GET",
+        });
 
         await new Promise((resolve) => setTimeout(resolve, 600));
 
-        // Kiểm tra response format đúng
-        if (res.data && res.data.success) {
-          const data = res.data.data; // Lấy data từ response
-
-          if (data && Array.isArray(data)) {
-            if (data.length > 0) {
-              setPatterns(data);
-            } else {
-              setPatterns([]);
-              toast(
-                `Chưa có cấu trúc ngữ pháp nào cho ${levelUpper}. Mèo sẽ sớm cập nhật thêm nhé! 😺`,
-                {
-                  icon: "😺",
-                  duration: 2000,
-                },
-              );
-            }
+        if (Array.isArray(data)) {
+          if (data.length > 0) {
+            setPatterns(data);
           } else {
             setPatterns([]);
-            toast("Dữ liệu không hợp lềE Mèo đang kiểm tra lại... 😿", {
-              icon: "😿",
-              duration: 2000,
-            });
+            toast(
+              `Chưa có cấu trúc ngữ pháp nào cho ${levelUpper}. Mèo sẽ sớm cập nhật thêm nhé! 😺`,
+              {
+                icon: "😺",
+                duration: 2000,
+              },
+            );
           }
         } else {
-          // Nếu response không có format ApiResponse, thử lấy trực tiếp
-          if (Array.isArray(res.data)) {
-            setPatterns(res.data);
-          } else {
-            setPatterns([]);
-            toast("Dữ liệu không hợp lềE Mèo đang kiểm tra lại... 😿", {
-              icon: "😿",
-              duration: 2000,
-            });
-          }
+          setPatterns([]);
+          toast("Dữ liệu không hợp lệ. Mèo đang kiểm tra lại... 😿", {
+            icon: "😿",
+            duration: 2000,
+          });
         }
       } catch (err: any) {
         console.error("Error fetching grammar:", err);
 
-        if (err.response?.status === 401) {
+        if (err.status === 401) {
           alert(
             "Phiên đăng nhập của bạn đã hết hạn!\nMèo sẽ đưa bạn vềEtrang đăng nhập ngay đây 😿",
           );
@@ -88,7 +75,7 @@ export function JlptGrammar({ level, onNavigate }: JlptGrammarProps) {
           setTimeout(() => {
             onNavigate("login");
           }, 1000);
-        } else if (err.response?.status === 404) {
+        } else if (err.status === 404) {
           toast.error(
             `API endpoint cho ${levelUpper} chưa sẵn sàng. Mèo đang sửa đây... 😿`,
             { duration: 3000 },

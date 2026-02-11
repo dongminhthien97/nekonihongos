@@ -13,7 +13,7 @@ import {
   Search,
   Zap,
 } from "lucide-react";
-import api from "../../api/axios";
+import { safeRequest } from "../../api/safeRequest";
 import toast from "react-hot-toast";
 
 interface QuestionDetail {
@@ -64,34 +64,31 @@ export function CorrectAnswersModal({
     try {
       setLoading(true);
 
-      const response = await api.get(
-        `/admin/questions/lesson/${lessonId}/correct-answers`,
-      );
+      const result = await safeRequest<{ data: any[]; count: number }>({
+        url: `/admin/questions/lesson/${lessonId}/correct-answers`,
+        method: "GET",
+      });
 
-      if (response.data.success && Array.isArray(response.data.data)) {
-        const rawData = response.data.data;
+      const rawData = Array.isArray(result.data) ? result.data : [];
+      const formattedQuestions: QuestionDetail[] = rawData.map((item: any) => ({
+        id: item.id,
+        lessonId: item.lessonId,
+        type: item.type || "fill_blank",
+        text: item.text || "",
+        correct_answer: item.correctAnswer || "",
+        points: item.points || 10,
+        example: item.example,
+        options: item.options,
+      }));
 
-        const formattedQuestions: QuestionDetail[] = rawData.map(
-          (item: any) => ({
-            id: item.id,
-            lessonId: item.lessonId,
-            type: item.type || "fill_blank",
-            text: item.text || "",
-            correct_answer: item.correctAnswer || "",
-            points: item.points || 10,
-            example: item.example,
-            options: item.options,
-          }),
-        );
+      setQuestions(formattedQuestions);
+      setExpandedQuestions(formattedQuestions.map((q) => q.id));
 
-        setQuestions(formattedQuestions);
-        setExpandedQuestions(formattedQuestions.map((q) => q.id));
-      } else {
-        setQuestions([]);
+      if (formattedQuestions.length === 0) {
         toast.error("Không có dữ liệu câu hỏi cho bài học này");
       }
     } catch (error: any) {
-      toast.error("Không thể tải thông tin câu hỏi");
+      toast.error(error?.message || "Không thể tải thông tin câu hỏi");
       setQuestions([]);
     } finally {
       setLoading(false);

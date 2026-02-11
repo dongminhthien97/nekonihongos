@@ -1,6 +1,6 @@
 // src/components/VocabularySelector.tsx
 import { useState, useEffect } from "react";
-import api from "../api/axios";
+import { safeRequest } from "../api/safeRequest";
 
 interface VocabType {
   id: string;
@@ -10,12 +10,6 @@ interface VocabType {
   icon: string;
   available: boolean;
   count?: number;
-}
-
-interface ApiResponse {
-  success: boolean;
-  count?: number;
-  message?: string;
 }
 
 const vocabTypes: VocabType[] = [
@@ -100,24 +94,17 @@ export function VocabularySelector({
         const vocab = updatedVocabList[i];
         if (vocab.id.startsWith("n")) {
           try {
-            // SỬA: Dùng toUpperCase() ở đây
-            const response = await api.get(
-              `/vocabulary/${vocab.id.toUpperCase()}/count`,
-            );
-            const data: ApiResponse = response.data;
-
-            if (!data?.success) {
-              console.warn(
-                `API không trả về cho ${vocab.id}, giữ nguyên trạng thái mặc định`,
-              );
-              continue;
-            }
+            const count = await safeRequest<number>({
+              url: `/vocabulary/${vocab.id.toUpperCase()}/count`,
+              method: "GET",
+              retries: 1,
+            });
 
             updatedVocabList[i] = {
               ...vocab,
               available: true,
-              count: data.count || 0,
-              subtitle: `~${data.count?.toLocaleString() || "0"} từ vựng chuẩn thi`,
+              count: count || 0,
+              subtitle: `~${(count || 0).toLocaleString()} từ vựng chuẩn thi`,
             };
           } catch (error) {
             console.error(`Lỗi khi gọi API cho ${vocab.id}:`, error);
@@ -153,19 +140,15 @@ export function VocabularySelector({
     if (typeId.startsWith("n")) {
       setIsLoading(true);
       try {
-        const response = await api.get(`/vocabulary/${typeId.toUpperCase()}/count`);
-        const data: ApiResponse = response.data;
+        const count = await safeRequest<number>({
+          url: `/vocabulary/${typeId.toUpperCase()}/count`,
+          method: "GET",
+          retries: 0,
+        });
 
-        if (!data?.success) {
-          console.warn(
-            `API không khả dụng cho ${typeId}, vẫn cho phép truy cập`,
-          );
-          // Vẫn cho phép điều hướng dù API không trả về
-        } else {
-          if (data.count === 0) {
-            console.warn(`Dữ liệu ${typeId} đang trống, vẫn cho phép truy cập`);
-            // Vẫn cho phép điều hướng, có thể sẽ hiển thị thông báo bên trong component
-          }
+        if (count === 0) {
+          console.warn(`Dữ liệu ${typeId} đang trống, vẫn cho phép truy cập`);
+          // Vẫn cho phép điều hướng, có thể sẽ hiển thị thông báo bên trong component
         }
       } catch (error) {
         console.error("Lỗi kiểm tra API:", error);

@@ -1,7 +1,7 @@
 // src/pages/admin/DashboardAdmin.tsx (FULL CODE HOÀN CHỈNH - GIỮ NGUYÊN 100% UI/UX + STYLE, FIX REDIRECT LOGIN BẰNG AUTH GUARD + LOADING)
 
 import { useEffect, useState } from "react";
-import api from "../../api/axios";
+import { safeRequest } from "../../api/safeRequest";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 
@@ -82,8 +82,10 @@ export function DashboardAdmin({ onNavigate }: DashboardAdminProps) {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/admin/users");
-      let userList: User[] = res.data?.data || res.data || [];
+      let userList = await safeRequest<User[]>({
+        url: "/admin/users",
+        method: "GET",
+      });
 
       userList = userList.map((user: any) => ({
         ...user,
@@ -95,7 +97,7 @@ export function DashboardAdmin({ onNavigate }: DashboardAdminProps) {
         setSelectedUser(userList[0]);
       }
     } catch (err: any) {
-      if (err.response?.status === 401 || err.response?.status === 403) {
+      if (err.status === 401 || err.status === 403) {
         toast.error("Phiên hết hạn hoặc không có quyền 😿");
         onNavigate("login");
       } else {
@@ -108,10 +110,14 @@ export function DashboardAdmin({ onNavigate }: DashboardAdminProps) {
 
   const fetchUnreadTestsCount = async () => {
     try {
-      const res = await api.get("/admin/mini-test/pending-count");
-      setUnreadTestsCount(res.data.count || 0);
+      const data = await safeRequest<{ count: number }>({
+        url: "/admin/mini-test/pending-count",
+        method: "GET",
+        retries: 0,
+      });
+      setUnreadTestsCount(data.count || 0);
     } catch (err: any) {
-      if (err.response?.status === 401) {
+      if (err.status === 401) {
         onNavigate("login");
       }
     }
@@ -137,12 +143,17 @@ export function DashboardAdmin({ onNavigate }: DashboardAdminProps) {
         status: formData.status || "ACTIVE",
       };
 
-      await api.post("/admin/users", payload);
+      await safeRequest<unknown>({
+        url: "/admin/users",
+        method: "POST",
+        data: payload,
+        retries: 0,
+      });
       alert("🎉 Tạo user thành công!");
       handleCloseModal();
       fetchUsers();
     } catch (err: any) {
-      const msg = err.response?.data?.message || "Tạo user thất bại";
+      const msg = err?.message || "Tạo user thất bại";
       alert(`😿 ${msg}`);
     }
   };
@@ -166,12 +177,17 @@ export function DashboardAdmin({ onNavigate }: DashboardAdminProps) {
         status: formData.status || "ACTIVE",
       };
 
-      await api.put(`/admin/users/${formData.id}`, payload);
+      await safeRequest<unknown>({
+        url: `/admin/users/${formData.id}`,
+        method: "PUT",
+        data: payload,
+        retries: 0,
+      });
       toast.success("✅ Cập nhật thành công!");
       handleCloseModal();
       await fetchUsers();
     } catch (err: any) {
-      toast.error(`😿 ${err.response?.data?.message || "Cập nhật thất bại"}`);
+      toast.error(`😿 ${err?.message || "Cập nhật thất bại"}`);
     }
   };
 
@@ -179,14 +195,18 @@ export function DashboardAdmin({ onNavigate }: DashboardAdminProps) {
     if (!window.confirm("Bạn có chắc chắn muốn xóa user này?")) return;
 
     try {
-      await api.delete(`/admin/users/${id}`);
+      await safeRequest<unknown>({
+        url: `/admin/users/${id}`,
+        method: "DELETE",
+        retries: 0,
+      });
       alert("🗑️ Xóa user thành công!");
       fetchUsers();
       if (selectedUser?.id === id) {
         setSelectedUser(users[0] || null);
       }
     } catch (err: any) {
-      alert(`😿 ${err.response?.data?.message || "Xóa thất bại"}`);
+      alert(`😿 ${err?.message || "Xóa thất bại"}`);
     }
   };
 

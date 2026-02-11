@@ -1,8 +1,8 @@
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
-  message: string | null;
-  errorCode: string | null;
+  message?: string;
+  errorCode?: string;
   timestamp: number;
 }
 
@@ -20,7 +20,7 @@ export function isApiResponse<T>(obj: any): obj is ApiResponse<T> {
     obj !== null &&
     typeof obj.success === "boolean" &&
     "data" in obj &&
-    "timestamp" in obj
+    typeof obj.timestamp === "number"
   );
 }
 

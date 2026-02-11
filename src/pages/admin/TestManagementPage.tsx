@@ -19,7 +19,7 @@ import {
   Square,
   Home,
 } from "lucide-react";
-import api from "../../api/axios";
+import { safeRequest } from "../../api/safeRequest";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import { AdminTestDetailModal } from "../../components/Admin/AdminTestDetailModal";
@@ -134,23 +134,27 @@ export function TestManagementPage({ onNavigate }: TestManagementPageProps) {
   const fetchUserInfo = async (userIds: number[]) => {
     try {
       const uniqueIds = [...new Set(userIds)];
-      const userPromises = uniqueIds.map((id) =>
-        api.get(`/admin/users/${id}`).catch(() => null),
-      );
+      const userPromises = uniqueIds.map(async (id) => {
+        try {
+          return await safeRequest<any>({
+            url: `/admin/users/${id}`,
+            method: "GET",
+            retries: 0,
+          });
+        } catch {
+          return null;
+        }
+      });
 
       const responses = await Promise.all(userPromises);
       const userMap: Record<number, { name: string; email: string }> = {};
 
-      responses.forEach((res, index) => {
-        if (res && res.data) {
-          userMap[uniqueIds[index]] = {
-            name:
-              res.data.data?.fullName ||
-              res.data.data?.username ||
-              `User ${uniqueIds[index]}`,
-            email: res.data.data?.email || "N/A",
-          };
-        }
+      responses.forEach((u, index) => {
+        if (!u) return;
+        userMap[uniqueIds[index]] = {
+          name: u.fullName || u.username || `User ${uniqueIds[index]}`,
+          email: u.email || "N/A",
+        };
       });
 
       setUserInfoMap((prev) => ({ ...prev, ...userMap }));
@@ -160,14 +164,17 @@ export function TestManagementPage({ onNavigate }: TestManagementPageProps) {
   const fetchTests = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/admin/mini-test/submissions");
+      const result = await safeRequest<{
+        data: any[];
+        currentPage?: number;
+        totalItems?: number;
+        totalPages?: number;
+      }>({
+        url: "/admin/mini-test/submissions",
+        method: "GET",
+      });
 
-      let backendData: any[] = [];
-      if (response.data.data && Array.isArray(response.data.data)) {
-        backendData = response.data.data;
-      } else if (Array.isArray(response.data)) {
-        backendData = response.data;
-      }
+      const backendData: any[] = Array.isArray(result.data) ? result.data : [];
 
       const mappedTests: UserTest[] = backendData.map((item: any) => {
         let answers: TestAnswer[] = [];
@@ -299,7 +306,7 @@ export function TestManagementPage({ onNavigate }: TestManagementPageProps) {
       }
     } catch (error: any) {
       toast.error(
-        error.response?.data?.message || "Lỗi khi tải danh sách bài test",
+        error?.message || "Lỗi khi tải danh sách bài test",
       );
       setTests([]);
     } finally {
@@ -309,8 +316,12 @@ export function TestManagementPage({ onNavigate }: TestManagementPageProps) {
 
   const fetchUnreadCount = async () => {
     try {
-      const response = await api.get("/admin/mini-test/pending-count");
-      setUnreadCount(response.data.count || response.data || 0);
+      const data = await safeRequest<{ count: number }>({
+        url: "/admin/mini-test/pending-count",
+        method: "GET",
+        retries: 0,
+      });
+      setUnreadCount(data.count || 0);
     } catch (error) {
       setUnreadCount(0);
     }
@@ -360,46 +371,50 @@ export function TestManagementPage({ onNavigate }: TestManagementPageProps) {
     try {
       setIsBatchDeleting(true);
 
-      const response = await api.post("/admin/mini-test/batch-delete", {
-        ids: selectedTests,
+      const result = await safeRequest<{
+        total: number;
+        successCount: number;
+        failedCount: number;
+        successIds?: number[];
+        failedIds?: number[];
+        errors?: Record<number, string>;
+      }>({
+        url: "/admin/mini-test/batch-delete",
+        method: "POST",
+        data: { ids: selectedTests },
+        retries: 0,
       });
 
-      if (response.data.success) {
-        const successCount = response.data.successCount || 0;
-        const failedCount = response.data.failedCount || 0;
+      const successCount = result.successCount || 0;
+      const failedCount = result.failedCount || 0;
 
-        if (successCount > 0) {
-          const successIds = response.data.successIds || [];
-          setTests((prevTests) =>
-            prevTests.filter((test) => !successIds.includes(test.id)),
-          );
-          setFilteredTests((prevTests) =>
-            prevTests.filter((test) => !successIds.includes(test.id)),
-          );
+      if (successCount > 0) {
+        const successIds = result.successIds || [];
+        setTests((prevTests) =>
+          prevTests.filter((test) => !successIds.includes(test.id)),
+        );
+        setFilteredTests((prevTests) =>
+          prevTests.filter((test) => !successIds.includes(test.id)),
+        );
 
-          setSelectedTests((prev) =>
-            prev.filter((id) => !successIds.includes(id)),
-          );
-        }
-
-        if (successCount > 0 && failedCount === 0) {
-          toast.success(`Đã xóa thành công ${successCount} bài test`);
-        } else if (successCount > 0 && failedCount > 0) {
-          toast.success(
-            `Đã xóa thành công ${successCount} bài test, ${failedCount} bài không thể xóa`,
-          );
-        } else {
-          toast.error("Không thể xóa các bài test này. Vui lòng thử lại sau. 😿");
-        }
-
-        await fetchUnreadCount();
-      } else {
-        toast.error(
-          response.data.message || "Có lỗi xảy ra khi xóa nhiều bài test",
+        setSelectedTests((prev) =>
+          prev.filter((id) => !successIds.includes(id)),
         );
       }
+
+      if (successCount > 0 && failedCount === 0) {
+        toast.success(`Đã xóa thành công ${successCount} bài test`);
+      } else if (successCount > 0 && failedCount > 0) {
+        toast.success(
+          `Đã xóa thành công ${successCount} bài test, ${failedCount} bài không thể xóa`,
+        );
+      } else {
+        toast.error("Không thể xóa các bài test này. Vui lòng thử lại sau. 😿");
+      }
+
+      await fetchUnreadCount();
     } catch (error: any) {
-      toast.error("Lỗi khi xóa hàng loạt bài test. 😿");
+      toast.error(error?.message || "Lỗi khi xóa hàng loạt bài test. 😿");
       fetchTests();
     } finally {
       setIsBatchDeleting(false);
@@ -416,34 +431,30 @@ export function TestManagementPage({ onNavigate }: TestManagementPageProps) {
     }
 
     try {
-      const response = await api.delete(
-        `/admin/mini-test/submission/${testId}`,
+      await safeRequest<unknown>({
+        url: `/admin/mini-test/submission/${testId}`,
+        method: "DELETE",
+        retries: 0,
+      });
+
+      setTests((prevTests) => prevTests.filter((test) => test.id !== testId));
+      setFilteredTests((prevTests) =>
+        prevTests.filter((test) => test.id !== testId),
       );
 
-      if (response.data && response.data.success === true) {
-        setTests((prevTests) => prevTests.filter((test) => test.id !== testId));
-        setFilteredTests((prevTests) =>
-          prevTests.filter((test) => test.id !== testId),
-        );
+      setSelectedTests((prev) => prev.filter((id) => id !== testId));
 
-        setSelectedTests((prev) => prev.filter((id) => id !== testId));
-
-        if (selectedTest && selectedTest.id === testId) {
-          setSelectedTest(null);
-          setShowScoringModal(false);
-          setShowAnswersModal(false);
-        }
-
-        await fetchUnreadCount();
-
-        toast.success(response.data.message || "Đã xóa bài test thành công!");
-      } else {
-        throw new Error(
-          response.data?.message || "Xóa thất bại (không rõ lý do)",
-        );
+      if (selectedTest && selectedTest.id === testId) {
+        setSelectedTest(null);
+        setShowScoringModal(false);
+        setShowAnswersModal(false);
       }
+
+      await fetchUnreadCount();
+
+      toast.success("Đã xóa bài test thành công!");
     } catch (error: any) {
-      toast.error("Lỗi khi xóa bài test. 😿");
+      toast.error(error?.message || "Lỗi khi xóa bài test. 😿");
       fetchTests();
     }
   };
@@ -467,15 +478,25 @@ export function TestManagementPage({ onNavigate }: TestManagementPageProps) {
         score: score,
       };
 
-      await api.post(`/admin/mini-test/submission/${testId}/feedback`, payload);
+      await safeRequest<unknown>({
+        url: `/admin/mini-test/submission/${testId}/feedback`,
+        method: "POST",
+        data: payload,
+        retries: 0,
+      });
 
       try {
-        await api.post("/notifications", {
-          user_id: selectedTest?.userId,
-          type: "test_reviewed",
-          title: `Phản hồi bài Mini Test - Bài ${selectedTest?.lessonId}`,
-          message: `Giáo viên đã chấm điểm bài test của bạn: ${payload.score} điểm. Hãy kiểm tra phản hồi chi tiết!`,
-          related_id: testId,
+        await safeRequest<unknown>({
+          url: "/notifications",
+          method: "POST",
+          data: {
+            user_id: selectedTest?.userId,
+            type: "test_reviewed",
+            title: `Phản hồi bài Mini Test - Bài ${selectedTest?.lessonId}`,
+            message: `Giáo viên đã chấm điểm bài test của bạn: ${payload.score} điểm. Hãy kiểm tra phản hồi chi tiết!`,
+            related_id: testId,
+          },
+          retries: 0,
         });
       } catch (notifError) {}
 
@@ -487,7 +508,7 @@ export function TestManagementPage({ onNavigate }: TestManagementPageProps) {
       return Promise.resolve();
     } catch (error: any) {
       toast.error(
-        error.response?.data?.message || "Có lỗi xảy ra khi gửi phản hồi",
+        error?.message || "Có lỗi xảy ra khi gửi phản hồi",
       );
       return Promise.reject(error);
     }

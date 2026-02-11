@@ -11,7 +11,7 @@ import {
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { useAuth } from "../context/AuthContext";
 import { useState, useEffect } from "react";
-import api from "../api/axios";
+import { safeRequest } from "../api/safeRequest";
 
 export function Navigation({
   currentPage,
@@ -47,8 +47,11 @@ export function Navigation({
     if (user?.role === "USER") {
       const fetchFeedbackCount = async () => {
         try {
-          const res = await api.get("/user/mini-test/feedback-count");
-          setFeedbackCount(res.data.count || 0);
+          const data = await safeRequest<{ count: number }>({
+            url: "/user/mini-test/feedback-count",
+            method: "GET",
+          });
+          setFeedbackCount(data.count || 0);
         } catch (err) {
           console.error("Lỗi lấy feedback:", err);
         }

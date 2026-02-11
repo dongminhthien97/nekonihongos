@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Footer } from "../../components/Footer";
-import api from "../../api/axios";
+import { safeRequest } from "../../api/safeRequest";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
 import {
@@ -77,62 +77,40 @@ export function HistoryTracking({ onNavigate }: HistoryTrackingProps) {
 
   useEffect(() => {
     const fetchActivities = async () => {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        toast.error("Không tìm thấy token!");
-        setTimeout(() => onNavigate("login"), 3000);
-        return;
-      }
-
       try {
         setIsLoading(true);
 
-        const res = await api.get("/admin/activity-logs", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+        const logs = await safeRequest<ActivityLog[]>({
+          url: "/admin/activity-logs",
+          method: "GET",
           timeout: 10000,
-          withCredentials: true,
+          retries: 0,
         });
 
-        let logs: ActivityLog[] = [];
-
-        // Xử lý response format
-        if (res.data && typeof res.data === "object") {
-          if (res.data.data && Array.isArray(res.data.data)) {
-            logs = res.data.data;
-          } else if (Array.isArray(res.data)) {
-            logs = res.data;
-          } else if (res.data.logs && Array.isArray(res.data.logs)) {
-            logs = res.data.logs;
-          }
-        }
-
         // Sắp xếp theo thời gian mới nhất trước
-        logs.sort(
+        const sortedLogs = [...logs].sort(
           (a, b) =>
             new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
         );
 
-        setActivities(logs);
+        setActivities(sortedLogs);
 
-        if (logs.length > 0) {
-          toast.success(`Đã tải ${logs.length} hoạt động!`);
+        if (sortedLogs.length > 0) {
+          toast.success(`Đã tải ${sortedLogs.length} hoạt động!`);
         }
       } catch (err: any) {
-        if (err.response?.status === 401) {
+        if (err.status === 401) {
           toast.error("Phiên đăng nhập hết hạn!");
           setTimeout(() => onNavigate("login"), 3000);
-        } else if (err.response?.status === 403) {
+        } else if (err.status === 403) {
           toast.error("Bạn không có quyền admin!");
           setTimeout(() => onNavigate("mypage"), 3000);
-        } else if (err.response?.status === 404) {
+        } else if (err.status === 404) {
           toast.error("Endpoint không tồn tại!");
-        } else if (err.response?.status === 500) {
+        } else if (err.status && err.status >= 500) {
           toast.error("Lỗi server!");
         } else {
-          toast.error("Lỗi tải lịch sử hoạt động!");
+          toast.error(err?.message || "Lỗi tải lịch sử hoạt động!");
         }
       } finally {
         setIsLoading(false);
@@ -162,46 +140,31 @@ export function HistoryTracking({ onNavigate }: HistoryTrackingProps) {
     onNavigate("admin");
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsLoading(true);
     setActivities([]); // Clear old data
 
-    // Gọi lại fetch function
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      toast.error("Không tìm thấy token!");
-      setTimeout(() => onNavigate("login"), 3000);
-      return;
-    }
-
-    api
-      .get("/admin/activity-logs", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        let logs: ActivityLog[] = [];
-        if (res.data?.data && Array.isArray(res.data.data)) {
-          logs = res.data.data;
-        } else if (Array.isArray(res.data)) {
-          logs = res.data;
-        }
-
-        logs.sort(
-          (a, b) =>
-            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-        );
-
-        setActivities(logs);
-        toast.success(`Đã tải ${logs.length} hoạt động!`, {
-          duration: TOAST_DURATION,
-        });
-      })
-      .catch((err) => {
-        toast.error("Lỗi refresh dữ liệu!", { duration: TOAST_DURATION });
-      })
-      .finally(() => {
-        setIsLoading(false);
+    try {
+      const logs = await safeRequest<ActivityLog[]>({
+        url: "/admin/activity-logs",
+        method: "GET",
+        retries: 0,
       });
+
+      const sortedLogs = [...logs].sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      );
+
+      setActivities(sortedLogs);
+      toast.success(`Đã tải ${sortedLogs.length} hoạt động!`, {
+        duration: TOAST_DURATION,
+      });
+    } catch (err) {
+      toast.error("Lỗi refresh dữ liệu!", { duration: TOAST_DURATION });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const goToPage = (page: number) => {
@@ -219,7 +182,11 @@ export function HistoryTracking({ onNavigate }: HistoryTrackingProps) {
   // Thêm hàm delete
   const handleDeleteLog = async (id: number) => {
     try {
-      await api.delete(`/admin/activity-logs/${id}`);
+      await safeRequest<unknown>({
+        url: `/admin/activity-logs/${id}`,
+        method: "DELETE",
+        retries: 0,
+      });
       toast.success("Xóa log thành công! 😻");
       // Refresh list
       const updatedActivities = activities.filter((log) => log.id !== id);

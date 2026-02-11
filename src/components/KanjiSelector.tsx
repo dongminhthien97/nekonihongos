@@ -1,7 +1,7 @@
 // src/components/KanjiSelector.tsx
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import api from "../api/axios";
+import { safeRequest } from "../api/safeRequest";
 
 interface KanjiType {
   id: string;
@@ -12,13 +12,6 @@ interface KanjiType {
   available: boolean;
   gradient: string;
   count?: number;
-}
-
-interface ApiResponse {
-  success: boolean;
-  data?: any[];
-  count?: number;
-  message?: string;
 }
 
 // Default counts for each level (fallback values)
@@ -123,22 +116,17 @@ export function KanjiSelector({
           const level = kanji.id.split("-")[1].toUpperCase(); // "jlpt-n5" -> "N5"
 
           try {
-            const response = await api.get(`/kanji/jlpt/${level}`);
-            const data: ApiResponse = response.data;
+            const count = await safeRequest<number>({
+              url: `/kanji/jlpt/${level}/count`,
+              method: "GET",
+              retries: 1,
+            });
 
-            if (data.success && data.data) {
-              updatedKanjiList[i] = {
-                ...kanji,
-                count: data.data.length,
-                subtitle: `~${data.data.length.toLocaleString()} Kanji chuẩn thi`,
-              };
-            } else {
-              updatedKanjiList[i] = {
-                ...kanji,
-                count: DEFAULT_KANJI_COUNTS[kanji.id],
-                subtitle: `~${DEFAULT_KANJI_COUNTS[kanji.id].toLocaleString()} Kanji chuẩn thi`,
-              };
-            }
+            updatedKanjiList[i] = {
+              ...kanji,
+              count,
+              subtitle: `~${count.toLocaleString()} Kanji chuẩn thi`,
+            };
           } catch (error) {
             console.error(`Lỗi network cho ${kanji.id}:`, error);
             // Dùng giá trị mặc định khi có lỗi network
@@ -196,10 +184,12 @@ export function KanjiSelector({
       setLoadingCard(typeId);
 
       try {
-        const response = await api.get(`/kanji/jlpt/${level}`);
-        const data: ApiResponse = response.data;
+        const data = await safeRequest<any[]>({
+          url: `/kanji/jlpt/${level}`,
+          method: "GET",
+        });
 
-        if (data.success && data.data && data.data.length > 0) {
+        if (Array.isArray(data) && data.length > 0) {
           const pageMapping: Record<string, string> = {
             N5: "kanji-n5",
             N4: "jlpt-kanji-n4",
@@ -211,7 +201,7 @@ export function KanjiSelector({
           const targetPage = pageMapping[level] || "kanji-n5";
           onNavigate(targetPage);
 
-          toast.success(`Đã tìm thấy ${data.data.length} Kanji ${level}! 🎉`);
+          toast.success(`Đã tìm thấy ${data.length} Kanji ${level}! 🎉`);
         } else {
           toast.error(
             `Chưa có Kanji ${level} trong database. Mèo sẽ sớm thêm nhé! 🐾`,
@@ -219,7 +209,7 @@ export function KanjiSelector({
         }
       } catch (error: any) {
         console.error(`Lỗi khi tải Kanji ${level}:`, error);
-        if (error?.response?.status === 404) {
+        if (error?.status === 404 || error?.response?.status === 404) {
           toast.error(
             `API cho Kanji ${level} chưa được triển khai. Đang chuyển sang trang thử nghiệm...`,
           );

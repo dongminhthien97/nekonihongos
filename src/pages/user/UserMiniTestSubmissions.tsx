@@ -1,6 +1,6 @@
 // src/pages/User/UserMiniTestSubmissions.tsx
 import { useState, useEffect } from "react";
-import api from "../../api/axios";
+import { safeRequest } from "../../api/safeRequest";
 import toast from "react-hot-toast";
 import {
   ChevronLeft,
@@ -61,25 +61,10 @@ export function UserMiniTestSubmissions({
       setLoading(true);
       setDebugInfo("Đang tải dữ liệu...");
 
-      const res = await api.get("/user/mini-test/submissions");
-
-      let rawData: any[] = [];
-
-      if (Array.isArray(res.data)) {
-        rawData = res.data;
-      } else if (res.data?.data && Array.isArray(res.data.data)) {
-        rawData = res.data.data;
-      } else if (res.data?.success && Array.isArray(res.data.data)) {
-        rawData = res.data.data;
-      } else if (res.data && typeof res.data === "object") {
-        const keys = Object.keys(res.data);
-        const arrayKey = keys.find((key) => Array.isArray(res.data[key]));
-        if (arrayKey) {
-          rawData = res.data[arrayKey];
-        } else {
-          rawData = [res.data];
-        }
-      }
+      const rawData = await safeRequest<any[]>({
+        url: "/user/mini-test/submissions",
+        method: "GET",
+      });
 
       const normalized = rawData
         .map((s: any, index: number) => {
@@ -226,24 +211,23 @@ export function UserMiniTestSubmissions({
       setDebugInfo(`Đã tải ${normalized.length} bài nộp`);
       setSubmissions(normalized);
     } catch (err: any) {
-      if (err.response) {
-        setDebugInfo(`Lỗi ${err.response.status}`);
-        if (err.response.status === 404) {
-          setErrorModal({
-            open: true,
-            title: "Không tìm thấy endpoint",
-            message:
-              "Endpoint API không tồn tại hoặc bị lỗi. Vui lòng thử lại sau!",
-          });
-        } else if (err.response.status === 500) {
-          setErrorModal({
-            open: true,
-            title: "Lỗi Server",
-            message: "Lỗi server. Vui lòng thử lại sau!",
-          });
-        }
-      } else if (err.request) {
-        setDebugInfo("Không nhận được phản hồi");
+      const status = err?.status as number | undefined;
+      setDebugInfo(status ? `Lỗi ${status}` : `Lỗi: ${err?.message || "Unknown"}`);
+
+      if (status === 404) {
+        setErrorModal({
+          open: true,
+          title: "Không tìm thấy endpoint",
+          message:
+            "Endpoint API không tồn tại hoặc bị lỗi. Vui lòng thử lại sau!",
+        });
+      } else if (status && status >= 500) {
+        setErrorModal({
+          open: true,
+          title: "Lỗi Server",
+          message: "Lỗi server. Vui lòng thử lại sau!",
+        });
+      } else if (err?.isNetworkError) {
         setErrorModal({
           open: true,
           title: "Lỗi Kết Nối",
@@ -251,11 +235,10 @@ export function UserMiniTestSubmissions({
             "Không thể kết nối đến server! Vui lòng kiểm tra kết nối mạng.",
         });
       } else {
-        setDebugInfo(`Lỗi: ${err.message}`);
         setErrorModal({
           open: true,
           title: "Lỗi Kết Nối",
-          message: "Lỗi kết nối! Vui lòng thử lại.",
+          message: err?.message || "Lỗi kết nối! Vui lòng thử lại.",
         });
       }
 
@@ -279,7 +262,11 @@ export function UserMiniTestSubmissions({
     if (!confirm("Bạn có chắc muốn xóa bài nộp này?")) return;
 
     try {
-      await api.delete(`/user/mini-test/submission/${id}`);
+      await safeRequest<unknown>({
+        url: `/user/mini-test/submission/${id}`,
+        method: "DELETE",
+        retries: 0,
+      });
       toast.success("Đã xóa bài nộp!");
       fetchSubmissions();
       if (selected?.id === id) setSelected(null);

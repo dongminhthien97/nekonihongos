@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import apiClient from "../../lib/api";
+import { safeRequest } from "../../api/safeRequest";
 import {
   X,
   Check,
@@ -240,22 +240,14 @@ export function AdminTestDetailModal({
     setFetchError(null);
 
     try {
-      const token = getAuthToken();
-      if (!token) {
-        throw new Error("Bạn chưa đăng nhập. Vui lòng đăng nhập và thử lại.");
-      }
+      const responseData = await safeRequest<any>({
+        url: "/grammar/mini-test/questions",
+        method: "GET",
+        params: { lesson_id: test.lessonId },
+        retries: 0,
+      });
 
-      const headers: HeadersInit = {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      };
-
-      const apiUrl = `/grammar/mini-test/questions?lesson_id=${test.lessonId}`;
-
-      const response = await apiClient.get(apiUrl);
-
-      const processedData = processGrammarQuestionsData(response.data);
+      const processedData = processGrammarQuestionsData(responseData);
       if (!processedData || processedData.length === 0) {
         throw new Error("Không tìm thấy câu hỏi trong phản hồi");
       }

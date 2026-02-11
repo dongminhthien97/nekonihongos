@@ -12,9 +12,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { NekoLoading } from "./NekoLoading";
-import api from "../api/axios";
+import { safeRequest } from "../api/safeRequest";
 import { MiniTestModal } from "./MiniTestModal";
-import { useBackendReady } from "../hooks/useBackendReady";
 
 const LESSONS_PER_PAGE = 12;
 const GRAMMAR_PER_PAGE = 3;
@@ -90,8 +89,10 @@ export function GrammarPage({
   useEffect(() => {
     const fetchGrammarLessons = async () => {
       try {
-        const res = await api.get("/grammar/lessons");
-        const serverLessons = res.data.data || [];
+        const serverLessons = await safeRequest<GrammarLesson[]>({
+          url: "/grammar/lessons",
+          method: "GET",
+        });
         await new Promise((resolve) => setTimeout(resolve, 600));
 
         setLessons(serverLessons);
@@ -99,7 +100,7 @@ export function GrammarPage({
       } catch (err: any) {
         console.error("😿 Lỗi khi tải ngữ pháp:", err);
 
-        if (err.response?.status === 401) {
+        if (err.status === 401) {
           alert("Phiên đăng nhập hết hạn! Mèo đưa bạn về trang đăng nhập nhé");
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");

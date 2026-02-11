@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { NekoLoading } from "./NekoLoading";
-import api from "../api/axios";
+import { safeRequest } from "../api/safeRequest";
 import toast from "react-hot-toast";
 
 interface JLPTWord {
@@ -62,23 +62,32 @@ export function VocabularyJLPT({ onNavigate, level }: VocabularyJLPTProps) {
       try {
         setIsLoading(true);
 
-        // SỬA: Dùng level.toUpperCase() thay vì level.toLowerCase()
-        const res = await api.get(
-          `/vocabulary/${level.toUpperCase()}?page=1&size=2000`,
-        );
-        const data = res.data?.data || [];
+        const listRes = await safeRequest<{
+          data: JLPTWord[];
+          pagination?: {
+            page: number;
+            size: number;
+            total: number;
+            totalPages: number;
+          };
+        }>({
+          url: `/vocabulary/${level.toUpperCase()}`,
+          method: "GET",
+          params: { page: 1, size: 2000 },
+        });
 
-        // SỬA: Tương tự cho count endpoint
-        const countRes = await api.get(
-          `/vocabulary/${level.toUpperCase()}/count`,
-        );
-        const count = countRes.data?.count || 0;
+        const data = Array.isArray(listRes.data) ? listRes.data : [];
+
+        const count = await safeRequest<number>({
+          url: `/vocabulary/${level.toUpperCase()}/count`,
+          method: "GET",
+        });
 
         // Simulate loading
         await new Promise((resolve) => setTimeout(resolve, 600));
 
         setWords(data);
-        setTotalCount(count);
+        setTotalCount(count || 0);
       } catch (err: any) {
         console.error(`Lỗi tải ${level}:`, err);
         setError(`Không tải được từ vựng ${level}. Mèo đang cố gắng...`);

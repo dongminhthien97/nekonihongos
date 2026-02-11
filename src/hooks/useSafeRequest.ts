@@ -1,6 +1,5 @@
 import { useCallback, useRef } from "react";
 import { safeRequest, handleAuthError } from "../api/safeRequest";
-import { type ApiError } from "../types/api";
 
 export function useSafeRequest() {
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());

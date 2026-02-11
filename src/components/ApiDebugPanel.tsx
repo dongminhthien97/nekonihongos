@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { safeRequest } from "../api/safeRequest";
 
 interface ApiResponse {
   status: number;
@@ -25,41 +26,31 @@ export const ApiDebugPanel: React.FC = () => {
     setResponse(null);
 
     try {
-      // Import apiClient dynamically to avoid circular imports
-      const { default: apiClient } = await import("../api/axios");
-
       const parsedParams = JSON.parse(params);
 
-      let result;
-      if (method === "GET") {
-        result = await apiClient.get(url, { params: parsedParams });
-      } else if (method === "POST") {
-        result = await apiClient.post(url, parsedParams);
-      } else if (method === "PUT") {
-        result = await apiClient.put(url, parsedParams);
-      } else if (method === "DELETE") {
-        result = await apiClient.delete(url, { params: parsedParams });
-      } else {
-        throw new Error(`Unsupported HTTP method: ${method}`);
-      }
+      const data = await safeRequest<any>({
+        url,
+        method,
+        ...(method === "GET" || method === "DELETE"
+          ? { params: parsedParams }
+          : { data: parsedParams }),
+        retries: 0,
+      });
 
       setResponse({
-        status: result.status,
-        statusText: result.statusText,
-        data: result.data,
-        headers: result.headers,
+        status: 200,
+        statusText: "OK",
+        data,
+        headers: {},
       });
     } catch (err: any) {
-      if (err.response) {
-        setResponse({
-          status: err.response.status,
-          statusText: err.response.statusText,
-          data: err.response.data,
-          headers: err.response.headers,
-        });
-      } else {
-        setError(err.message || "Unknown error occurred");
-      }
+      const status = err?.status || 0;
+      setResponse({
+        status,
+        statusText: status ? "Error" : "",
+        data: { message: err?.message || "Unknown error occurred", code: err?.code },
+        headers: {},
+      });
     } finally {
       setLoading(false);
     }

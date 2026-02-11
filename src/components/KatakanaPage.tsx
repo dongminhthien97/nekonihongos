@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Cat } from "lucide-react";
 import { HiraKataDetailModal } from "./HiraKataDetailModal";
 import { NekoLoading } from "./NekoLoading";
-import api from "../api/axios";
+import { safeRequest } from "../api/safeRequest";
 import { NekoAlertModal } from "./NekoAlertModal";
 import { LessonSelectModal } from "./LessonSelectModal";
 
@@ -51,9 +51,10 @@ export function KatakanaPage({ onNavigate }: KatakanaPageProps) {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get("/katakana");
-        let rawData =
-          response.data.data || response.data.katakana || response.data;
+        const rawData = await safeRequest<any[]>({
+          url: "/katakana",
+          method: "GET",
+        });
 
         if (Array.isArray(rawData)) {
           const normalizedData = rawData.map((item: any) => ({

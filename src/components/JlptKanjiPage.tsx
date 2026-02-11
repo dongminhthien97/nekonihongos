@@ -1,7 +1,7 @@
 // src/components/JlptKanjiPage.tsx
 import { useState, useEffect } from "react";
 import { NekoLoading } from "./NekoLoading";
-import api from "../api/axios";
+import { safeRequest } from "../api/safeRequest";
 import toast from "react-hot-toast";
 
 interface KanjiJlptItem {
@@ -33,32 +33,33 @@ export function JlptKanjiPage({
     let hasToasted = false;
     const fetchKanjiByLevel = async () => {
       try {
-        const res = await api.get(`/kanji/jlpt/${level}`);
-        if (res.data && res.data.success && Array.isArray(res.data.data)) {
-          if (res.data.data.length > 0) {
-            const formattedData = res.data.data.map(
-              (item: any, index: number) => ({
-                id: item.id || index + 1,
-                stt: (index + 1).toString(),
-                kanji: item.kanji || item.character || "",
-                hanViet: item.hanViet || item.han_viet || item.meaning || "",
-                meaning: item.meaning || item.meanings?.join?.(", ") || "",
-                onYomi: item.onyomi || item.onYomi || item.on_reading || "",
-                kunYomi: item.kunyomi || item.kunYomi || item.kun_reading || "",
-                level: item.level || level,
-              }),
-            );
-            setKanjiList(formattedData);
-            await new Promise((resolve) => setTimeout(resolve, 600));
-          } else {
-            setKanjiList([]);
-            if (!hasToasted) {
-              hasToasted = true;
-              toast(`Chưa có Kanji ${level} nào. Mèo sẽ sớm cập nhật nhé! 😺`, {
-                icon: "😺",
-                duration: 1000,
-              });
-            }
+        const raw = await safeRequest<any[]>({
+          url: `/kanji/jlpt/${level}`,
+          method: "GET",
+        });
+
+        if (raw.length > 0) {
+          const formattedData = raw.map((item: any, index: number) => ({
+            id: item.id || index + 1,
+            stt: (index + 1).toString(),
+            kanji: item.kanji || item.character || "",
+            hanViet: item.hanViet || item.han_viet || item.meaning || "",
+            meaning: item.meaning || item.meanings?.join?.(", ") || "",
+            onYomi: item.onyomi || item.onYomi || item.on_reading || "",
+            kunYomi: item.kunyomi || item.kunYomi || item.kun_reading || "",
+            level: item.level || level,
+          }));
+
+          setKanjiList(formattedData);
+          await new Promise((resolve) => setTimeout(resolve, 600));
+        } else {
+          setKanjiList([]);
+          if (!hasToasted) {
+            hasToasted = true;
+            toast(`Chưa có Kanji ${level} nào. Mèo sẽ sớm cập nhật nhé! 😺`, {
+              icon: "😺",
+              duration: 1000,
+            });
           }
         }
       } catch (err: any) {

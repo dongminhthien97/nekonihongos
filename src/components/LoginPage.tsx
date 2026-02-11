@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { useAuth } from "../context/AuthContext";
 import { Background } from "./Background";
-import { useBackendReady } from "../hooks/useBackendReady";
 
 export function LoginPage() {
   const [email, setEmail] = useState("");
@@ -29,7 +28,7 @@ export function LoginPage() {
 
   const getVietnameseErrorMessage = (error: any): string => {
     // Network / timeout / no response errors
-    if (!error.response) {
+    if (!error.response && !error.status) {
       if (
         error.code === "NETWORK_ERROR" ||
         error.message?.includes("timeout")
@@ -40,7 +39,7 @@ export function LoginPage() {
     }
 
     // HTTP errors
-    const status = error.response?.status;
+    const status = error.response?.status ?? error.status;
     switch (status) {
       case 401:
         return "Email hoặc mật khẩu không đúng.";

@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 
-import api from "../api/axios";
+import { safeRequest } from "../api/safeRequest";
 import {
   clearAuthStorage,
   splashStorage,
@@ -16,26 +16,9 @@ import {
   refreshTokenStorage,
 } from "./storage";
 import { logError } from "../utils/logger";
-
-export interface User {
-  id: number;
-  username: string;
-  fullName?: string;
-  email: string;
-  role: "USER" | "ADMIN";
-  avatarUrl?: string;
-  level: number;
-  points: number;
-  streak?: number;
-  longestStreak?: number;
-  joinDate: string;
-  lastLoginDate?: string;
-  status?: "ACTIVE" | "INACTIVE" | "BANNED";
-  vocabularyProgress?: number;
-  kanjiProgress?: number;
-  grammarProgress?: number;
-  exerciseProgress?: number;
-}
+import type { LoginResponse } from "../types/auth";
+export type { User } from "../types/User";
+import type { User } from "../types/User";
 
 interface AuthContextType {
   user: User | null;
@@ -71,16 +54,6 @@ const normalizeUser = (backendUser: any): User => ({
   exerciseProgress: backendUser.exerciseProgress || 0,
 });
 
-const mapLoginResponse = (raw: any) => {
-  console.log("LOGIN RAW RESPONSE", raw);
-
-  const token = raw.token;
-  const refreshToken = raw.refreshToken;
-  const user = normalizeUser(raw.user || raw);
-
-  return { token, refreshToken, user };
-};
-
 export const AuthProvider = ({
   children,
   onNavigate,
@@ -97,8 +70,10 @@ export const AuthProvider = ({
     if (!token) return;
 
     try {
-      const res = await api.get("/user/me");
-      const backendUser = res.data?.data ?? res.data;
+      const backendUser = await safeRequest<any>({
+        url: "/user/me",
+        method: "GET",
+      });
 
       if (!backendUser) throw new Error("No user data");
 
@@ -135,25 +110,30 @@ export const AuthProvider = ({
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const res = await api.post(
-        "/auth/login",
-        { email, password },
-        { headers: { "Content-Type": "application/json" } },
-      );
+      const data = await safeRequest<LoginResponse>({
+        url: "/auth/login",
+        method: "POST",
+        data: { email, password },
+        headers: { "Content-Type": "application/json" },
+        retries: 0,
+      });
 
-      const mapped = mapLoginResponse(res.data);
-      if (!mapped.token) return false;
+      if (!data?.token) return false;
 
-      tokenStorage.set(mapped.token);
-      if (mapped.refreshToken) {
-        refreshTokenStorage.set(mapped.refreshToken);
-      }
+      tokenStorage.set(data.token);
+      if (data.refreshToken) refreshTokenStorage.set(data.refreshToken);
 
-      await loadUserFromBackend();
+      const normalizedUser = normalizeUser(data.user);
+      setUser(normalizedUser);
+      userStorage.set(normalizedUser);
+
       return true;
     } catch (error) {
+      const status = (error as any)?.status;
+      if (status === 401) return false;
+
       logError("Login failed:", error);
-      return false;
+      throw error;
     }
   };
 

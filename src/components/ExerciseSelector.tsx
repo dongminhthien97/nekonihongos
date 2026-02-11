@@ -1,6 +1,6 @@
 // src/components/ExerciseSelector.tsx
 import { useState, useEffect } from "react";
-import api from "../api/axios";
+import { safeRequest } from "../api/safeRequest";
 import toast from "react-hot-toast";
 
 interface Category {
@@ -34,18 +34,16 @@ export function ExerciseSelector({
     const fetchData = async () => {
       try {
         // BềEsetIsLoading(true) →không cần loading nữa
-        const [catRes, levelRes] = await Promise.all([
-          api.get("/categories"),
-          api.get("/levels"),
+        const [cats, lvls] = await Promise.all([
+          safeRequest<Category[]>({ url: "/categories", method: "GET" }),
+          safeRequest<Level[]>({ url: "/levels", method: "GET" }),
         ]);
 
-        setCategories(catRes.data);
+        setCategories(cats);
 
         // Sắp xếp N5 →N1 (giảm dần)
         setLevels(
-          levelRes.data.sort((a: Level, b: Level) =>
-            b.level.localeCompare(a.level),
-          ),
+          [...lvls].sort((a: Level, b: Level) => b.level.localeCompare(a.level)),
         );
       } catch (err) {
         toast.error("Không tải được dữ liệu. Mèo đang sửa đây... 😿");

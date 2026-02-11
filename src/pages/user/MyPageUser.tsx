@@ -1,7 +1,7 @@
 // src/pages/User/MyPageUser.tsx
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import api from "../../api/axios";
+import { safeRequest } from "../../api/safeRequest";
 import toast from "react-hot-toast";
 import { NekoLoading } from "../../components/NekoLoading";
 
@@ -41,8 +41,11 @@ export function MyPageUser({ onNavigate }: MyPageUserProps) {
   useEffect(() => {
     const fetchFeedbackCount = async () => {
       try {
-        const res = await api.get("/user/mini-test/feedback-count");
-        setFeedbackCount(res.data.count || 0);
+        const data = await safeRequest<{ count: number }>({
+          url: "/user/mini-test/feedback-count",
+          method: "GET",
+        });
+        setFeedbackCount(data.count || 0);
       } catch (err) {
         console.error("Lỗi lấy feedback:", err);
       }
@@ -99,11 +102,12 @@ export function MyPageUser({ onNavigate }: MyPageUserProps) {
       return;
     }
     try {
-      const res = await api.patch("/user/me/avatar", {
-        avatarUrl: avatarUrl.trim(),
+      const updated = await safeRequest<{ avatarUrl?: string }>({
+        url: "/user/me/avatar",
+        method: "PATCH",
+        data: { avatarUrl: avatarUrl.trim() },
       });
-      const newAvatar =
-        res.data?.data?.avatarUrl || res.data?.avatarUrl || avatarUrl.trim();
+      const newAvatar = updated.avatarUrl || avatarUrl.trim();
       updateUser({ avatarUrl: newAvatar });
       await refreshUser();
       toast.success("Cập nhật avatar thành công! 😻");

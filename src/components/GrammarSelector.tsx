@@ -1,6 +1,6 @@
 // src/components/GrammarSelector.tsx
 import { useState, useEffect } from "react";
-import api from "../api/axios";
+import { safeRequest } from "../api/safeRequest";
 
 interface GrammarType {
   id: string;
@@ -104,10 +104,11 @@ export function GrammarSelector({
         if (grammar.id.startsWith("n")) {
           try {
             // SỬA: Dùng đúng endpoint mới với /api/grammar/jlpt/{level}/count
-            const response = await api.get(
-              `/grammar/jlpt/${grammar.id.toUpperCase()}/count`,
-            );
-            const data: ApiResponse = response.data;
+            const count = await safeRequest<number>({
+              url: `/grammar/jlpt/${grammar.id.toUpperCase()}/count`,
+              method: "GET",
+            });
+            const data: ApiResponse = { success: true, data: count };
 
             if (!data?.success) {
               console.warn(
@@ -161,10 +162,11 @@ export function GrammarSelector({
       setIsLoading(true);
       try {
         // SỬA: Dùng đúng endpoint mới
-        const response = await api.get(
-          `/grammar/jlpt/${typeId.toUpperCase()}/count`,
-        );
-        const data: ApiResponse = response.data;
+        const count = await safeRequest<number>({
+          url: `/grammar/jlpt/${typeId.toUpperCase()}/count`,
+          method: "GET",
+        });
+        const data: ApiResponse = { success: true, data: count };
 
         if (!data?.success) {
           console.warn(

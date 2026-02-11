@@ -9,7 +9,7 @@ import {
   GripVertical,
   AlertCircle,
 } from "lucide-react";
-import api from "../api/axios";
+import { safeRequest } from "../api/safeRequest";
 
 // --- INTERFACES ---
 interface Question {
@@ -189,17 +189,22 @@ export function MiniTestModal({
         setLoading(true);
 
         try {
-          await api.get(`/grammar-tests/check`, {
-            params: { lessonId },
+          await safeRequest<unknown>({
+            url: "/grammar-tests/check",
+            method: "GET",
+            params: { lesson_id: lessonId },
+            retries: 0,
           });
         } catch (checkErr) {}
 
-        const qRes = await api.get(
-          `/grammar/mini-test/questions?lesson_id=${lessonId}`,
-        );
+        const qRes = await safeRequest<{ data: any[]; count: number }>({
+          url: "/grammar/mini-test/questions",
+          method: "GET",
+          params: { lesson_id: lessonId },
+        });
 
-        if (qRes.data.success && Array.isArray(qRes.data.data)) {
-          const formatted = qRes.data.data.map((item: any, index: number) => ({
+        if (Array.isArray(qRes.data)) {
+          const formatted = qRes.data.map((item: any, index: number) => ({
             id: item.id || index + 1,
             lesson_id: item.lessonId || lessonId,
             example: item.example || "",
@@ -460,11 +465,31 @@ export function MiniTestModal({
         submittedAt: new Date().toISOString(),
       };
 
-      const res = await api.post("/grammar-tests/submit", payload, {
+      await safeRequest<unknown>({
+        url: "/grammar-tests/submit",
+        method: "POST",
+        data: payload,
         timeout: 10000,
+        retries: 0,
       });
 
-      if (res.data.success) {
+      setTestSubmitted(true);
+      if (onSuccess) {
+        onSuccess({
+          lessonId,
+          lessonTitle,
+          timeSpent: isAutoSubmit ? 600 : Math.max(0, 600 - timeLeft),
+          questionCount: questions.length,
+        });
+      }
+      setIsClosingModal(true);
+      setTimeout(() => {
+        onClose();
+      }, 300);
+    } catch (e: any) {
+      const message = String(e?.message || "");
+
+      if (message.includes("đã nộp bài") || message.includes("nộp bài này rồi")) {
         setTestSubmitted(true);
         if (onSuccess) {
           onSuccess({
@@ -478,69 +503,27 @@ export function MiniTestModal({
         setTimeout(() => {
           onClose();
         }, 300);
-      } else {
-        if (
-          res.data.message?.includes("đã nộp bài") ||
-          res.data.message?.includes("nộp bài này rồi")
-        ) {
-          setTestSubmitted(true);
-          if (onSuccess) {
-            onSuccess({
-              lessonId,
-              lessonTitle,
-              timeSpent: isAutoSubmit ? 600 : Math.max(0, 600 - timeLeft),
-              questionCount: questions.length,
-            });
-          }
-          setIsClosingModal(true);
-          setTimeout(() => {
-            onClose();
-          }, 300);
-        } else {
-          if (onError) {
-            onError(res.data.message || "Nộp bài không thành công!", "server");
-          }
-        }
+        return;
       }
-    } catch (e: any) {
-      let errorMsg = "Có lỗi xảy ra khi nộp bài!";
+
+      let errorMsg = message || "Có lỗi xảy ra khi nộp bài!";
       let errorTyp: "validation" | "server" | "timeout" = "server";
 
-      if (e.code === "ECONNABORTED" || e.message.includes("timeout")) {
+      if (e?.isTimeout) {
         errorMsg = "Request timeout. Vui lòng thử lại.";
         errorTyp = "timeout";
-      } else if (e.code === "ERR_NETWORK" || e.message.includes("Network")) {
+      } else if (e?.isNetworkError) {
         errorMsg = "Mất kết nối mạng. Vui lòng kiểm tra kết nối và thử lại.";
         errorTyp = "server";
-      } else if (e.response?.status === 400) {
-        const errorData = e.response.data;
-        if (
-          errorData.message?.includes("đã nộp bài") ||
-          errorData.message?.includes("nộp bài này rồi")
-        ) {
-          setTestSubmitted(true);
-          if (onSuccess) {
-            onSuccess({
-              lessonId,
-              lessonTitle,
-              timeSpent: isAutoSubmit ? 600 : Math.max(0, 600 - timeLeft),
-              questionCount: questions.length,
-            });
-          }
-          setIsClosingModal(true);
-          setTimeout(() => {
-            onClose();
-          }, 300);
-          return;
-        } else {
-          errorMsg =
-            errorData.message || "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.";
-          errorTyp = "validation";
+      } else if (e?.status === 400) {
+        errorTyp = "validation";
+        if (!message) {
+          errorMsg = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.";
         }
-      } else if (e.response?.status === 401) {
+      } else if (e?.status === 401) {
         errorMsg = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
         errorTyp = "server";
-      } else if (e.response?.status === 500) {
+      } else if (typeof e?.status === "number" && e.status >= 500) {
         errorMsg = "Lỗi máy chủ. Vui lòng thử lại sau.";
         errorTyp = "server";
       }

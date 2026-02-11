@@ -10,7 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import api from "../api/axios";
+import { safeRequest } from "../api/safeRequest";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 
@@ -113,9 +113,9 @@ export function ExercisePage({
 
         //Loading
         await new Promise((resolve) => setTimeout(resolve, 600));
-        const res = await api.get(endpoint);
-        if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-          setExercises(res.data);
+        const data = await safeRequest<Exercise[]>({ url: endpoint, method: "GET" });
+        if (Array.isArray(data) && data.length > 0) {
+          setExercises(data);
         } else {
           setExercises([]);
           toast(
@@ -125,7 +125,7 @@ export function ExercisePage({
         }
       } catch (err: any) {
         console.error("❁ELỗi tải bài tập:", err);
-        if (err.response?.status === 401) {
+        if (err.status === 401) {
           toast.error(
             "Phiên đăng nhập hết hạn rồi... Mèo đưa bạn về đăng nhập nhé 😿",
             { duration: 6000 },
@@ -152,11 +152,10 @@ export function ExercisePage({
   const handleExerciseSelect = async (exerciseId: number) => {
     // Sử dụng toast.promise đềEchềEcó 1 toast duy nhất (loading →success hoặc error)
     await toast.promise(
-      api.get(`/exercises/${exerciseId}`),
+      safeRequest<Exercise>({ url: `/exercises/${exerciseId}`, method: "GET" }),
       {
         loading: "Mèo đang chuẩn bị bài tập... 🐱",
-        success: (res) => {
-          const exercise: Exercise = res.data;
+        success: (exercise: Exercise) => {
           if (!exercise.questions || exercise.questions.length === 0) {
             throw new Error("no_questions");
           }
@@ -293,8 +292,11 @@ export function ExercisePage({
         exerciseTitle: selectedExercise.title || `Bài tập ${category} ${level}`,
       };
 
-      const response = await api.post("/exercises/submit", request);
-      const result: ExerciseResult = response.data.data;
+      const result = await safeRequest<ExerciseResult>({
+        url: "/exercises/submit",
+        method: "POST",
+        data: request,
+      });
 
       // Toast level up hoặc normal
       if (result.leveledUp) {
@@ -358,7 +360,7 @@ export function ExercisePage({
         );
       }
 
-      if (error.response?.status === 401) {
+      if (error.status === 401) {
         toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!");
         setTimeout(() => onNavigate("login"), 2000);
       } else {

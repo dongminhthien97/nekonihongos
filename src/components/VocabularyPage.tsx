@@ -1,10 +1,9 @@
 // VocabularyPage.tsx
 import { useState, useMemo, useEffect } from "react";
 import { Search, ChevronLeft, ChevronRight, Cat } from "lucide-react";
-import api from "../api/axios";
+import { safeRequest } from "../api/safeRequest";
 import { NekoLoading } from "./NekoLoading";
 import { NekoAlertModal } from "./NekoAlertModal";
-import { useBackendReady } from "../hooks/useBackendReady";
 
 interface Word {
   japanese: string;
@@ -42,8 +41,10 @@ export function VocabularyPage({ onNavigate }: VocabularyPageProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await api.get("/vocabulary/lessons");
-        const serverLessons = res.data.data || [];
+        const serverLessons = await safeRequest<Lesson[]>({
+          url: "/vocabulary/lessons",
+          method: "GET",
+        });
 
         // Đảm bảo loading hiện ít nhất 0.6 giây - trải nghiệm mượt mà, sang trọng
         await new Promise((resolve) => setTimeout(resolve, 600));
@@ -52,7 +53,7 @@ export function VocabularyPage({ onNavigate }: VocabularyPageProps) {
       } catch (err: any) {
         console.error("Lỗi khi tải từ vựng:", err);
 
-        if (err.response?.status === 401) {
+        if (err.status === 401) {
           alert("Phiên đăng nhập hết hạn! Mèo đưa bạn về trang đăng nhập nhé");
 
           // Xóa hết dữ liệu đăng nhập
