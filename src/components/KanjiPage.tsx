@@ -98,7 +98,11 @@ export function KanjiPage({
 
         // Map backend response to frontend domain model
         const backendLessons: BackendKanjiLesson[] = res.data.data || [];
+        console.log("API Response:", res.data);
+        console.log("Backend Lessons:", backendLessons);
+
         const normalizedLessons = backendLessons.map(normalizeKanjiLesson);
+        console.log("Normalized Lessons:", normalizedLessons);
 
         setLessons(normalizedLessons);
         setError("");
