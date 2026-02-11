@@ -2,8 +2,8 @@ import axios, { type AxiosInstance, type AxiosResponse } from 'axios';
 
 // Create axios instance with environment-based base URL
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
-  timeout: 10000,
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -13,7 +13,7 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     // Add auth token if available
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

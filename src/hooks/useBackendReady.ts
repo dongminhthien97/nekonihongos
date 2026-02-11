@@ -18,10 +18,10 @@ export interface BackendReadyState {
 
 export function useBackendReady(options: HealthCheckOptions = {}) {
   const {
-    maxRetries = 5,
+    maxRetries = 3,
     initialDelay = 1000,
-    maxDelay = 16000,
-    timeout = 10000,
+    maxDelay = 8000,
+    timeout = 15000,
     onReady,
     onNotReady,
   } = options;
@@ -102,7 +102,7 @@ export function useBackendReady(options: HealthCheckOptions = {}) {
         setState({
           isReady: false,
           isChecking: false,
-          error: "Hệ thống đang khởi động, vui lòng chờ...",
+          error: "Server đang khởi động...",
           lastCheck: Date.now(),
         });
         onNotReady?.();
