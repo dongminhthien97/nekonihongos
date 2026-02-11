@@ -6,6 +6,7 @@ import { NekoLoading } from "./NekoLoading";
 import api from "../api/axios";
 import { NekoAlertModal } from "./NekoAlertModal";
 import { tokenStorage } from "../auth/storage";
+import { useBackendReady } from "../hooks/useBackendReady";
 
 const LESSONS_PER_PAGE = 12;
 const KANJI_PER_PAGE = 12;

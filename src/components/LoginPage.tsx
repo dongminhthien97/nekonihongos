@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { useAuth } from "../context/AuthContext";
 import { Background } from "./Background";
+import { useBackendReady } from "../hooks/useBackendReady";
 
 export function LoginPage() {
   const [email, setEmail] = useState("");

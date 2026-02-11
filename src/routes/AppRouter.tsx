@@ -6,6 +6,7 @@ import { LoginPage } from "../components/LoginPage";
 import AppShell from "../App";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicRoute } from "./PublicRoute";
+import { useBackendReady } from "../hooks/useBackendReady";
 
 export const AppRouter = () => {
   if (!isEnvValid()) {

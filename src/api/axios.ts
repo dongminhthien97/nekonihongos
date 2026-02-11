@@ -30,7 +30,7 @@ const handleUnauthorized = () => {
 const api: AxiosInstance = axios.create({
   baseURL,
   withCredentials: false,
-  timeout: 15000,
+  timeout: 65000, // Tăng timeout lên 65s để tránh timeout do cold start
 });
 
 api.interceptors.request.use((config) => {

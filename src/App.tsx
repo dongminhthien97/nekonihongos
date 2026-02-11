@@ -22,6 +22,7 @@ import { Background } from "./components/Background";
 import { Navigation } from "./components/Navigation";
 import { Footer } from "./components/Footer";
 import { HistoryTracking } from "./pages/admin/HistoryTracking";
+import { useBackendReady } from "./hooks/useBackendReady";
 
 // THÊM IMPORT CÁC TRANG HIRAGANA/KATAKANA
 import { HiraganaPage } from "./components/HiraganaPage";

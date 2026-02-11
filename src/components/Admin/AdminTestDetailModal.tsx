@@ -18,7 +18,6 @@ import {
   Download,
   RefreshCw,
   Info,
-  Filter,
   Hash,
   Database,
   CheckSquare,

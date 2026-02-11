@@ -4,6 +4,7 @@ import { Search, ChevronLeft, ChevronRight, Cat } from "lucide-react";
 import api from "../api/axios";
 import { NekoLoading } from "./NekoLoading";
 import { NekoAlertModal } from "./NekoAlertModal";
+import { useBackendReady } from "../hooks/useBackendReady";
 
 interface Word {
   japanese: string;
@@ -126,7 +127,7 @@ export function VocabularyPage({ onNavigate }: VocabularyPageProps) {
   // TÌM KIẾM THẬT TỪ BACKEND
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
-    
+
     // Vì useMemo không hỗ trợ async trực tiếp -> dùng trick
     let results: { word: Word; lessonId: number }[] = [];
     if (searchQuery) {

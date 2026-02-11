@@ -10,11 +10,11 @@ import {
   CheckCircle2,
   AlertCircle,
   AlertTriangle,
-  X,
 } from "lucide-react";
 import { NekoLoading } from "./NekoLoading";
 import api from "../api/axios";
 import { MiniTestModal } from "./MiniTestModal";
+import { useBackendReady } from "../hooks/useBackendReady";
 
 const LESSONS_PER_PAGE = 12;
 const GRAMMAR_PER_PAGE = 3;
@@ -602,8 +602,7 @@ export function GrammarPage({
             {errorType === "server" && (
               <div className="error-hint">
                 <p>
-                  <strong>Khắc phục:</strong> Kiểm tra kết nối mạng và thử
-                  lại.
+                  <strong>Khắc phục:</strong> Kiểm tra kết nối mạng và thử lại.
                 </p>
               </div>
             )}
