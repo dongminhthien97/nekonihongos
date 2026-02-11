@@ -1,6 +1,6 @@
 type EnvKey = "VITE_API_URL";
 
-const DEV_FALLBACK_API_URL = "http://localhost:8080/api";
+const DEV_FALLBACK_API_URL = "http://localhost:8080";
 
 const missingKeys: EnvKey[] = [];
 
