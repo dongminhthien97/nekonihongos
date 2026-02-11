@@ -1,5 +1,5 @@
 // src/pages/LoginPage.tsx hoặc src/components/LoginPage.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { useAuth } from "../context/AuthContext";
 import { Background } from "./Background";
@@ -11,18 +11,93 @@ export function LoginPage() {
   const [error, setError] = useState("");
   const { login } = useAuth();
 
+  // Wake up backend on mount
+  useEffect(() => {
+    const wakeBackend = async () => {
+      try {
+        await fetch("/api/health", {
+          method: "GET",
+          cache: "no-cache",
+        });
+      } catch (err) {
+        // Ignore wake-up errors
+      }
+    };
+    wakeBackend();
+  }, []);
+
+  const getVietnameseErrorMessage = (error: any): string => {
+    // Network / timeout / no response errors
+    if (!error.response) {
+      if (
+        error.code === "NETWORK_ERROR" ||
+        error.message?.includes("timeout")
+      ) {
+        return "Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.";
+      }
+      return "Hệ thống đang khởi động, vui lòng chờ trong giây lát...";
+    }
+
+    // HTTP errors
+    const status = error.response?.status;
+    switch (status) {
+      case 401:
+        return "Email hoặc mật khẩu không đúng.";
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        return "Hệ thống đang gặp sự cố. Vui lòng thử lại sau.";
+      default:
+        return "Đã xảy ra lỗi không xác định. Vui lòng thử lại.";
+    }
+  };
+
+  const handleLoginWithRetry = async (
+    email: string,
+    password: string,
+  ): Promise<boolean> => {
+    const maxRetries = 4;
+    const retryDelay = 2500; // 2.5 seconds
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const success = await login(email, password);
+        if (success) return true;
+
+        // If login returns false, it's a credential error - don't retry
+        return false;
+      } catch (err: any) {
+        // If we have a response (HTTP error), don't retry
+        if (err.response) {
+          throw err;
+        }
+
+        // If this is the last attempt, throw the error
+        if (attempt === maxRetries) {
+          throw err;
+        }
+
+        // Wait before retrying
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      }
+    }
+    return false;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
     try {
-      const success = await login(email, password);
+      const success = await handleLoginWithRetry(email, password);
       if (!success) {
-        setError("Tên đăng nhập hoặc mật khẩu không đúng!");
+        setError("Email hoặc mật khẩu không đúng.");
       }
-    } catch (err) {
-      setError("Đã có lỗi xảy ra. Vui lòng thử lại!");
+    } catch (err: any) {
+      const vietnameseError = getVietnameseErrorMessage(err);
+      setError(vietnameseError);
     } finally {
       setIsLoading(false);
     }
