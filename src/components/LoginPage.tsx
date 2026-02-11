@@ -15,7 +15,7 @@ export function LoginPage() {
   useEffect(() => {
     const wakeBackend = async () => {
       try {
-        await fetch("/api/health", {
+        await fetch(`${import.meta.env.VITE_API_URL}/health`, {
           method: "GET",
           cache: "no-cache",
         });

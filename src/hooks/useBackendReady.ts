@@ -37,7 +37,7 @@ export function useBackendReady(options: HealthCheckOptions = {}) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    try {
+      try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/health`, {
         method: "GET",
         signal: controller.signal,

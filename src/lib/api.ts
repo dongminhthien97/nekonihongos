@@ -1,43 +1,23 @@
-import axios, { type AxiosInstance, type AxiosResponse } from 'axios';
+import axios from "axios";
 
-// Create axios instance with environment-based base URL
-const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
+const baseURL = import.meta.env.VITE_API_URL;
+
+if (!baseURL) {
+  throw new Error("VITE_API_URL is not defined");
+}
+
+if (baseURL.includes("onrender.com")) {
+  throw new Error("Production build is pointing to Render domain. STOP.");
+}
+
+if (import.meta.env.PROD && baseURL.includes("localhost")) {
+  throw new Error("Production build is pointing to localhost. STOP.");
+}
+
+export const api = axios.create({
+  baseURL,
+  withCredentials: false,
   timeout: 15000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
-// Request interceptor to add auth token
-apiClient.interceptors.request.use(
-  (config) => {
-    // Add auth token if available
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor to handle errors
-apiClient.interceptors.response.use(
-  (response: AxiosResponse) => {
-    return response;
-  },
-  (error) => {
-    // Handle authentication errors
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
-
-export default apiClient;
+export default api;

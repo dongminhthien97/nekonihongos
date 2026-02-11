@@ -39,10 +39,10 @@ export function HiraKataDetailModal({
           charArray.map(async (char) => {
             const unicodeHex = char.charCodeAt(0).toString(16).padStart(5, "0");
             const response = await fetch(
-              `https://raw.githubusercontent.com/KanjiVG/kanjivg/master/kanji/${unicodeHex}.svg`
+              `https://raw.githubusercontent.com/KanjiVG/kanjivg/master/kanji/${unicodeHex}.svg`,
             );
             return response.ok ? await response.text() : null;
-          })
+          }),
         );
 
         if (!isMounted || !containerRef.current) return;
@@ -70,7 +70,7 @@ export function HiraKataDetailModal({
           svgElement
             .querySelectorAll("text")
             .forEach(
-              (t) => ((t as unknown as HTMLElement).style.display = "none")
+              (t) => ((t as unknown as HTMLElement).style.display = "none"),
             );
 
           const paths = svgElement.querySelectorAll("path");
