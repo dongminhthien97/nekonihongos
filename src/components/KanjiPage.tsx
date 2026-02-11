@@ -38,25 +38,25 @@ interface BackendKanjiLesson {
   lessonId: number;
   lessonTitle: string;
   icon: string;
-  kanji: Kanji[];
+  kanji: BackendKanji[];
 }
 
 interface BackendKanji {
   kanji: string;
-  on: string;
-  kun: string;
+  onReading: string;
+  kunReading: string;
   hanViet: string;
   meaning: string;
   strokes: number;
-  svgPaths: string[];
-  compounds: KanjiCompound[];
+  svgPaths?: string[]; // Optional - may not be present in backend
+  compounds?: KanjiCompound[]; // Optional - may not be present in backend
 }
 
 // Mapping functions
 const normalizeKanji = (backendKanji: BackendKanji): Kanji => ({
   kanji: backendKanji.kanji || "",
-  on: backendKanji.on || "",
-  kun: backendKanji.kun || "",
+  on: backendKanji.onReading || "",
+  kun: backendKanji.kunReading || "",
   hanViet: backendKanji.hanViet || "",
   meaning: backendKanji.meaning || "",
   strokes: backendKanji.strokes || 0,
