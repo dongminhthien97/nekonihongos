@@ -197,14 +197,14 @@ export function MiniTestModal({
           });
         } catch (checkErr) {}
 
-        const qRes = await safeRequest<{ data: any[]; count: number }>({
+        const qRes = await safeRequest<Question[]>({
           url: "/grammar/mini-test/questions",
           method: "GET",
           params: { lesson_id: lessonId },
         });
 
-        if (Array.isArray(qRes.data)) {
-          const formatted = qRes.data.map((item: any, index: number) => ({
+        if (Array.isArray(qRes)) {
+          const formatted = qRes.map((item: any, index: number) => ({
             id: item.id || index + 1,
             lesson_id: item.lessonId || lessonId,
             example: item.example || "",
@@ -489,7 +489,10 @@ export function MiniTestModal({
     } catch (e: any) {
       const message = String(e?.message || "");
 
-      if (message.includes("đã nộp bài") || message.includes("nộp bài này rồi")) {
+      if (
+        message.includes("đã nộp bài") ||
+        message.includes("nộp bài này rồi")
+      ) {
         setTestSubmitted(true);
         if (onSuccess) {
           onSuccess({
