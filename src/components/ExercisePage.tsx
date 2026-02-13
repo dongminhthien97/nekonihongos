@@ -458,9 +458,6 @@ export function ExercisePage({
                       <div className="flex-1 text-left">
                         <h3 className="exercise-card-title">{ex.title}</h3>
                         <p className="exercise-card-desc">{ex.description}</p>
-                        <div className="exercise-card-meta">
-                          <span>📝 {ex.totalQuestions} câu hỏi</span>
-                        </div>
                       </div>
                     </div>
                   </button>
