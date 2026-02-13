@@ -62,7 +62,7 @@ export function VocabularyJLPT({ onNavigate, level }: VocabularyJLPTProps) {
       try {
         setIsLoading(true);
 
-        const listRes = await safeRequest<JLPTWord[]>({
+        const listRes = await safeRequest<any>({
           url: `/vocabulary/${level.toUpperCase()}`,
           method: "GET",
           params: { page: 1, size: 2000 },
@@ -71,8 +71,29 @@ export function VocabularyJLPT({ onNavigate, level }: VocabularyJLPTProps) {
         console.log(`API response for ${level}:`, listRes);
         console.log(`Data type:`, typeof listRes);
         console.log(`Is array:`, Array.isArray(listRes));
+        console.log(`Response keys:`, Object.keys(listRes));
 
-        const data = Array.isArray(listRes) ? listRes : [];
+        // Handle different response formats
+        let data: JLPTWord[];
+        if (Array.isArray(listRes)) {
+          data = listRes;
+        } else if (
+          listRes &&
+          typeof listRes === "object" &&
+          "content" in listRes
+        ) {
+          // Handle { content: [...], pagination: {...} } format
+          data = Array.isArray(listRes.content) ? listRes.content : [];
+        } else if (
+          listRes &&
+          typeof listRes === "object" &&
+          "data" in listRes
+        ) {
+          // Handle { data: [...] } format
+          data = Array.isArray(listRes.data) ? listRes.data : [];
+        } else {
+          data = [];
+        }
 
         const count = await safeRequest<number>({
           url: `/vocabulary/${level.toUpperCase()}/count`,
