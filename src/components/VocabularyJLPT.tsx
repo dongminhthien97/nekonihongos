@@ -68,6 +68,10 @@ export function VocabularyJLPT({ onNavigate, level }: VocabularyJLPTProps) {
           params: { page: 1, size: 2000 },
         });
 
+        console.log(`API response for ${level}:`, listRes);
+        console.log(`Data type:`, typeof listRes);
+        console.log(`Is array:`, Array.isArray(listRes));
+
         const data = Array.isArray(listRes) ? listRes : [];
 
         const count = await safeRequest<number>({
