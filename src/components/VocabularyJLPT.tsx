@@ -62,21 +62,13 @@ export function VocabularyJLPT({ onNavigate, level }: VocabularyJLPTProps) {
       try {
         setIsLoading(true);
 
-        const listRes = await safeRequest<{
-          data: JLPTWord[];
-          pagination?: {
-            page: number;
-            size: number;
-            total: number;
-            totalPages: number;
-          };
-        }>({
+        const listRes = await safeRequest<JLPTWord[]>({
           url: `/vocabulary/${level.toUpperCase()}`,
           method: "GET",
           params: { page: 1, size: 2000 },
         });
 
-        const data = Array.isArray(listRes.data) ? listRes.data : [];
+        const data = Array.isArray(listRes) ? listRes : [];
 
         const count = await safeRequest<number>({
           url: `/vocabulary/${level.toUpperCase()}/count`,
