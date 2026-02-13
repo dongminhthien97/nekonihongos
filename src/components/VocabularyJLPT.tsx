@@ -68,11 +68,6 @@ export function VocabularyJLPT({ onNavigate, level }: VocabularyJLPTProps) {
           params: { page: 1, size: 2000 },
         });
 
-        console.log(`API response for ${level}:`, listRes);
-        console.log(`Data type:`, typeof listRes);
-        console.log(`Is array:`, Array.isArray(listRes));
-        console.log(`Response keys:`, Object.keys(listRes));
-
         // Handle different response formats
         let data: JLPTWord[];
         if (Array.isArray(listRes)) {
