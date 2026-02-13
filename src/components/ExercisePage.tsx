@@ -113,7 +113,10 @@ export function ExercisePage({
 
         //Loading
         await new Promise((resolve) => setTimeout(resolve, 600));
-        const data = await safeRequest<Exercise[]>({ url: endpoint, method: "GET" });
+        const data = await safeRequest<Exercise[]>({
+          url: endpoint,
+          method: "GET",
+        });
         if (Array.isArray(data) && data.length > 0) {
           setExercises(data);
         } else {
@@ -456,7 +459,7 @@ export function ExercisePage({
                         <h3 className="exercise-card-title">{ex.title}</h3>
                         <p className="exercise-card-desc">{ex.description}</p>
                         <div className="exercise-card-meta">
-                          <span>📝 {ex.totalQuestions || 10} câu hỏi</span>
+                          <span>📝 {ex.totalQuestions} câu hỏi</span>
                         </div>
                       </div>
                     </div>
