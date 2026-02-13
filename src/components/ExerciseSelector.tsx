@@ -66,12 +66,11 @@ export function ExerciseSelector({
     const catName = selectedCategory.name.toLowerCase(); // "vocabulary", "grammar", "kanji"
     const levelName = level.level.toLowerCase(); // "n5", "n4", ...
 
-    // Mở khóa tất cả các cấp độ cho từ vựng (N5 → N1)
-    // Các loại bài tập khác vẫn chỉ có N5
+    // Mở khóa tất cả các cấp độ cho tất cả các loại bài tập (N5 → N1)
     const isAvailable =
-      catName === "vocabulary" || // Mở khóa tất cả cấp độ cho từ vựng
-      (catName === "grammar" && levelName === "n5") ||
-      (catName === "kanji" && levelName === "n5");
+      catName === "vocabulary" || // Từ vựng: mở khóa N5, N4, N3, N2, N1
+      catName === "grammar" || // Ngữ pháp: mở khóa N5, N4, N3, N2, N1
+      catName === "kanji"; // Kanji: mở khóa N5, N4, N3, N2, N1
 
     if (isAvailable) {
       onNavigate("exercise", { category: catName, level: levelName });
@@ -165,11 +164,11 @@ export function ExerciseSelector({
                 const catName = selectedCategory.name.toLowerCase();
                 const levelName = level.level.toLowerCase();
 
-                // Mở khóa tất cả cấp độ cho từ vựng, các loại khác chỉ N5
+                // Mở khóa tất cả cấp độ cho tất cả các loại bài tập
                 const isAvailable =
                   catName === "vocabulary" || // Từ vựng: mở khóa N5, N4, N3, N2, N1
-                  (catName === "grammar" && levelName === "n5") ||
-                  (catName === "kanji" && levelName === "n5");
+                  catName === "grammar" || // Ngữ pháp: mở khóa N5, N4, N3, N2, N1
+                  catName === "kanji"; // Kanji: mở khóa N5, N4, N3, N2, N1
 
                 return (
                   <button
