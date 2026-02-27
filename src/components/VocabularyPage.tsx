@@ -1,3 +1,4 @@
+import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 // VocabularyPage.tsx
 import { useState, useMemo, useEffect } from "react";
 import { Search, ChevronLeft, ChevronRight, Cat } from "lucide-react";

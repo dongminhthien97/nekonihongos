@@ -1,3 +1,4 @@
+import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 // src/components/VocabularyJLPT.tsx
 import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
