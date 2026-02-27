@@ -8,6 +8,7 @@ import { useSafeRequest } from "../hooks/useSafeRequest";
 import { NekoAlertModal } from "./NekoAlertModal";
 import { tokenStorage } from "../auth/storage";
 import { useBackendReady } from "../hooks/useBackendReady";
+import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 
 const LESSONS_PER_PAGE = 12;
 const KANJI_PER_PAGE = 12;
@@ -666,12 +667,11 @@ export function KanjiPage({
         )}
       </main>
       {/* MÁY BAY SIÊU DỄ THƯƠNG - CLICK VÀO HỌC FLASHCARD KANJI TỪ BÀI HIỆN TẠI */}
-
       <DraggableFloatingNeko
         storageKey="floating-neko-kanji"
         onClick={handleStartFlashcardKanji}
         tooltip={
-          <div className="tooltimainp-slide-out">
+          <div className="tooltip-slide-out">
             <div className="colored-border-label">
               <p className="text-xl font-bold drop-shadow-md">
                 Học flashcard Kanji từ bài hiện tại nào mèo ơi! 🐾

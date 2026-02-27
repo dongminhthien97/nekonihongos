@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { NekoLoading } from "./NekoLoading";
 import { safeRequest } from "../api/safeRequest";
 import toast from "react-hot-toast";
+import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 
 interface JLPTWord {
   level: string;

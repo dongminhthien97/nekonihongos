@@ -15,6 +15,7 @@ import {
 import { NekoLoading } from "./NekoLoading";
 import { safeRequest } from "../api/safeRequest";
 import { MiniTestModal } from "./MiniTestModal";
+import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 
 const LESSONS_PER_PAGE = 12;
 const GRAMMAR_PER_PAGE = 3;
