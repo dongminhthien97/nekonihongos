@@ -5,6 +5,7 @@ import { NekoLoading } from "./NekoLoading";
 import { safeRequest } from "../api/safeRequest";
 import { NekoAlertModal } from "./NekoAlertModal";
 import { LessonSelectModal } from "./LessonSelectModal";
+import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 
 interface Hiragana {
   id: number;
@@ -344,11 +345,10 @@ export function HiraganaPage({ onNavigate }: HiraganaPageProps) {
       </main>
 
       {/* MÁY BAY MODAL CHỌN LESSON */}
-      <div className="fixed bottom-10 right-10 z-50 hidden lg:block">
-        <div
-          className="relative group cursor-pointer"
-          onClick={handleStartFlashcard}
-        >
+      <DraggableFloatingNeko
+        storageKey="floating-neko-hiragana"
+        onClick={handleStartFlashcard}
+        tooltip={
           <div className="tooltip-slide-out">
             <div className="colored-border-label">
               <p className="text-xl font-bold">Chọn bài để ôn Flashcard! 🐾</p>
@@ -357,14 +357,9 @@ export function HiraganaPage({ onNavigate }: HiraganaPageProps) {
               </div>
             </div>
           </div>
-          <img
-            src="https://i.pinimg.com/1200x/8c/98/00/8c9800bb4841e7daa0a3db5f7db8a4b7.jpg"
-            alt="Flying Neko"
-            className="responsive-circular-image-hover"
-          />
-          <div className="circular-gradient-hover-glow"></div>
-        </div>
-      </div>
+        }
+        glow={<div className="circular-gradient-hover-glow"></div>}
+      />
       {/* MODAL CHỌN LESSON FLASHCARD */}
       <LessonSelectModal
         isOpen={showLessonSelectModal}

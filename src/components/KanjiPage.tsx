@@ -7,6 +7,7 @@ import { useSafeRequest } from "../hooks/useSafeRequest";
 import { NekoAlertModal } from "./NekoAlertModal";
 import { tokenStorage } from "../auth/storage";
 import { useBackendReady } from "../hooks/useBackendReady";
+import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 
 const LESSONS_PER_PAGE = 12;
 const KANJI_PER_PAGE = 12;
@@ -665,11 +666,10 @@ export function KanjiPage({
         )}
       </main>
       {/* MÁY BAY SIÊU DỄ THƯƠNG - CLICK VÀO HỌC FLASHCARD KANJI TỪ BÀI HIỆN TẠI */}
-      <div className="fixed bottom-10 right-10 z-50 hidden lg:block">
-        <div
-          className="relative group cursor-pointer"
-          onClick={handleStartFlashcardKanji}
-        >
+      <DraggableFloatingNeko
+        storageKey="floating-neko-kanji"
+        onClick={handleStartFlashcardKanji}
+        tooltip={
           <div className="tooltip-slide-out">
             <div className="colored-border-label">
               <p className="text-xl font-bold drop-shadow-md">
@@ -683,19 +683,12 @@ export function KanjiPage({
               ✨
             </div>
           </div>
-
-          <img
-            src="https://i.pinimg.com/1200x/8c/98/00/8c9800bb4841e7daa0a3db5f7db8a4b7.jpg"
-            alt="Flying Neko"
-            className="responsive-circular-image-hover"
-            style={{
-              filter: "drop-shadow(0 10px 20px rgba(255, 182, 233, 0.6))",
-            }}
-          />
-
-          <div className="circular-gradient-hover-glow"></div>
-        </div>
-      </div>
+        }
+        imageStyle={{
+          filter: "drop-shadow(0 10px 20px rgba(255, 182, 233, 0.6))",
+        }}
+        glow={<div className="circular-gradient-hover-glow"></div>}
+      />
       {/* MODAL CHI TIẾT KANJI */}
       {selectedKanji && (
         <KanjiDetailModal

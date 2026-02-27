@@ -14,6 +14,7 @@ import {
 import { NekoLoading } from "./NekoLoading";
 import { safeRequest } from "../api/safeRequest";
 import { MiniTestModal } from "./MiniTestModal";
+import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 
 const LESSONS_PER_PAGE = 12;
 const GRAMMAR_PER_PAGE = 3;
@@ -496,22 +497,19 @@ export function GrammarPage({
       </main>
 
       {/* Phần hình con mèo */}
-      <div className="fixed bottom-10 right-10 z-50 hidden lg:block">
-        <img
-          src="https://i.pinimg.com/1200x/8c/98/00/8c9800bb4841e7daa0a3db5f7db8a4b7.jpg"
-          alt="Flying Neko"
-          className="w-40 h-40 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 xl:w-36 xl:h-36 rounded-full object-cover shadow-2xl animate-fly drop-shadow-2xl cursor-pointer hover:scale-105 transition-transform duration-300"
-          style={{
-            filter: "drop-shadow(0 10px 20px rgba(255, 182, 233, 0.4))",
-          }}
-          onClick={handleNekoClick}
-          title={
-            selectedLesson
-              ? "Làm bài test cho bài học này!"
-              : "Chọn bài học để làm test"
-          }
-        />
-      </div>
+      <DraggableFloatingNeko
+        storageKey="floating-neko-grammar"
+        onClick={handleNekoClick}
+        imageClassName="rounded-full object-cover shadow-2xl animate-fly drop-shadow-2xl cursor-pointer hover:scale-105 transition-transform duration-300"
+        imageStyle={{
+          filter: "drop-shadow(0 10px 20px rgba(255, 182, 233, 0.4))",
+        }}
+        title={
+          selectedLesson
+            ? "Làm bài test cho bài học này!"
+            : "Chọn bài học để làm test"
+        }
+      />
 
       {/* Modal Mini Test */}
       <MiniTestModal

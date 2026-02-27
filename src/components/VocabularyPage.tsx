@@ -4,6 +4,7 @@ import { Search, ChevronLeft, ChevronRight, Cat } from "lucide-react";
 import { safeRequest } from "../api/safeRequest";
 import { NekoLoading } from "./NekoLoading";
 import { NekoAlertModal } from "./NekoAlertModal";
+import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 
 interface Word {
   japanese: string;
@@ -401,12 +402,10 @@ export function VocabularyPage({ onNavigate }: VocabularyPageProps) {
         )}
       </main>
       {/* MÁE BAY SIÊU DềETHƯƠNG  EHOVER HIềE BONG BÓNG CHAT + CLICK VÀO HỌC FLASHCARD */}
-      <div className="fixed bottom-10 right-10 z-50 hidden lg:block">
-        <div
-          className="relative group cursor-pointer"
-          onClick={handleStartFlashcard}
-        >
-          {/* Bong bóng chat  EchềEhiện khi hover */}
+      <DraggableFloatingNeko
+        storageKey="floating-neko-vocabulary"
+        onClick={handleStartFlashcard}
+        tooltip={
           <div className="tooltip-slide-out">
             <div className="colored-border-label">
               <p className="text-xl font-bold drop-shadow-md">
@@ -420,21 +419,12 @@ export function VocabularyPage({ onNavigate }: VocabularyPageProps) {
               ✨
             </div>
           </div>
-
-          {/* Mèo bay  Ecó hiệu ứng hover nhẹ */}
-          <img
-            src="https://i.pinimg.com/1200x/8c/98/00/8c9800bb4841e7daa0a3db5f7db8a4b7.jpg"
-            alt="Flying Neko"
-            className="responsive-circular-image-hover"
-            style={{
-              filter: "drop-shadow(0 10px 20px rgba(255, 182, 233, 0.6))",
-            }}
-          />
-
-          {/* Hiệu ứng lấp lánh khi hover */}
-          <div className="circular-gradient-hover-glow"></div>
-        </div>
-      </div>
+        }
+        imageStyle={{
+          filter: "drop-shadow(0 10px 20px rgba(255, 182, 233, 0.6))",
+        }}
+        glow={<div className="circular-gradient-hover-glow"></div>}
+      />
       <style>{`
 
       .circular-gradient-hover-glow {
