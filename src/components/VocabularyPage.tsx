@@ -1,10 +1,10 @@
-import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 // VocabularyPage.tsx
 import { useState, useMemo, useEffect } from "react";
 import { Search, ChevronLeft, ChevronRight, Cat } from "lucide-react";
 import { safeRequest } from "../api/safeRequest";
 import { NekoLoading } from "./NekoLoading";
 import { NekoAlertModal } from "./NekoAlertModal";
+import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 
 interface Word {
   japanese: string;
