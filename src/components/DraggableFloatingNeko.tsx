@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
 
 interface DraggableFloatingNekoProps {
   storageKey: string;
@@ -154,7 +161,8 @@ export function DraggableFloatingNeko({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         onClick={handleClick}
-        style={{ touchAction: "none" }}
+        onPointerLeave={handlePointerUp}
+        style={{ touchAction: "none", cursor: dragRef.current.dragging ? "grabbing" : "grab" }}
         title={title}
       >
         {tooltip}

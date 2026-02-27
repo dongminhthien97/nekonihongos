@@ -5,6 +5,7 @@ import { Search, ChevronLeft, ChevronRight, Cat } from "lucide-react";
 import { safeRequest } from "../api/safeRequest";
 import { NekoLoading } from "./NekoLoading";
 import { NekoAlertModal } from "./NekoAlertModal";
+import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 
 interface Word {
   japanese: string;
