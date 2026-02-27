@@ -2752,3 +2752,45 @@ button[title="Thoát"]:hover span {
 .font-mplus {
   font-family: "M PLUS Rounded 1c", sans-serif;
 }
+
+/* Mobile-safe layout guards: chỉ ngăn tràn ngang, không đổi logic/UI chính */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+/* Mobile modal safety: giữ modal hiển thị tốt trên màn hình điện thoại */
+@media (max-width: 768px) {
+  [class*="modal-overlay"],
+  [class*="modal-backdrop"],
+  [class*="error-modal-overlay"] {
+    padding: 0.5rem;
+  }
+
+  [class*="modal-container"],
+  [class*="modal-content"],
+  [class*="error-modal"],
+  [class*="neko-avatar-edit-modal"] {
+    width: min(100%, calc(100vw - 1rem)) !important;
+    max-width: calc(100vw - 1rem) !important;
+    max-height: calc(100dvh - 1rem) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  [role="dialog"] {
+    max-width: calc(100vw - 1rem) !important;
+    max-height: calc(100dvh - 1rem) !important;
+    overflow-y: auto !important;
+  }
+}

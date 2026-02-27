@@ -344,7 +344,7 @@ export function HiraganaPage({ onNavigate }: HiraganaPageProps) {
       </main>
 
       {/* MÁY BAY MODAL CHỌN LESSON */}
-      <div className="fixed bottom-10 right-10 z-50 hidden lg:block">
+      <div className="fixed bottom-4 right-4 md:bottom-10 md:right-10 z-50 block">
         <div
           className="relative group cursor-pointer"
           onClick={handleStartFlashcard}
