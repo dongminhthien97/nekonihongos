@@ -1155,6 +1155,57 @@ export function MiniTestModal({
             width: 1.75rem;
             height: 1.75rem;
           }
+
+          @media (max-width: 768px) {
+            .test-modal {
+              height: calc(100dvh - 0.75rem);
+              border-radius: 20px;
+            }
+
+            .modal-header {
+              position: relative;
+              padding: 1rem;
+              padding-right: 4rem;
+              align-items: flex-start;
+            }
+
+            .header-left {
+              min-width: 0;
+              gap: 0.5rem;
+            }
+
+            .header-right {
+              gap: 0.5rem;
+              margin-right: 0.25rem;
+            }
+
+            .modal-title {
+              font-size: 1.125rem;
+              line-height: 1.3;
+            }
+
+            .lesson-title {
+              font-size: 0.875rem;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              max-width: 58vw;
+            }
+
+            .timer-display {
+              padding: 0.4rem 0.7rem;
+              font-size: 0.95rem;
+            }
+
+            .close-modal-button {
+              position: absolute;
+              top: 0.65rem;
+              right: 0.65rem;
+              z-index: 30;
+              background: #ffffff;
+              box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            }
+          }
           
           .modal-body {
             flex: 1;
