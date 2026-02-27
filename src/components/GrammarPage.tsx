@@ -1,4 +1,3 @@
-import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 // src/pages/GrammarPage.tsx
 import { useState, useEffect } from "react";
 import {

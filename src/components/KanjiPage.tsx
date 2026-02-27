@@ -1,4 +1,3 @@
-import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 // src/pages/KanjiPage.tsx
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Search, ChevronLeft, ChevronRight, Cat } from "lucide-react";
