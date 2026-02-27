@@ -5,6 +5,7 @@ import { NekoLoading } from "./NekoLoading";
 import { safeRequest } from "../api/safeRequest";
 import { NekoAlertModal } from "./NekoAlertModal";
 import { LessonSelectModal } from "./LessonSelectModal";
+import { DraggableFloatingNeko } from "./DraggableFloatingNeko";
 
 interface Katakana {
   id: number;
@@ -327,11 +328,10 @@ export function KatakanaPage({ onNavigate }: KatakanaPageProps) {
       </main>
 
       {/* MÁE FLASHCARD */}
-      <div className="fixed bottom-4 right-4 md:bottom-10 md:right-10 z-50 block">
-        <div
-          className="relative group cursor-pointer"
-          onClick={handleStartFlashcard}
-        >
+      <DraggableFloatingNeko
+        storageKey="floating-neko-katakana"
+        onClick={handleStartFlashcard}
+        tooltip={
           <div className="tooltip-slide-out">
             <div className="colored-border-label">
               <p className="text-xl font-bold">Ôn Flashcard Katakana! 🐾</p>
@@ -340,14 +340,9 @@ export function KatakanaPage({ onNavigate }: KatakanaPageProps) {
               </div>
             </div>
           </div>
-          <img
-            src="https://i.pinimg.com/1200x/8c/98/00/8c9800bb4841e7daa0a3db5f7db8a4b7.jpg"
-            alt="Flying Neko"
-            className="responsive-circular-image-hover"
-          />
-          <div className="circular-gradient-hover-glow"></div>
-        </div>
-      </div>
+        }
+        glow={<div className="circular-gradient-hover-glow"></div>}
+      />
 
       <LessonSelectModal
         isOpen={showLessonSelectModal}
