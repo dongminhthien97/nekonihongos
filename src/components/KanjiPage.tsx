@@ -666,19 +666,12 @@ export function KanjiPage({
         )}
       </main>
       {/* MÁY BAY SIÊU DỄ THƯƠNG - CLICK VÀO HỌC FLASHCARD KANJI TỪ BÀI HIỆN TẠI */}
-<<<<<<< codex/ensure-responsive-design-for-mobile-oupblu
+
       <DraggableFloatingNeko
         storageKey="floating-neko-kanji"
         onClick={handleStartFlashcardKanji}
         tooltip={
-=======
-      <div className="fixed bottom-4 right-4 md:bottom-10 md:right-10 z-50 block">
-        <div
-          className="relative group cursor-pointer"
-          onClick={handleStartFlashcardKanji}
-        >
->>>>>>> main
-          <div className="tooltip-slide-out">
+          <div className="tooltimainp-slide-out">
             <div className="colored-border-label">
               <p className="text-xl font-bold drop-shadow-md">
                 Học flashcard Kanji từ bài hiện tại nào mèo ơi! 🐾
