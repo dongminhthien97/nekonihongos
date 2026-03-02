@@ -524,7 +524,7 @@ export function UserMiniTestSubmissions({
                           </span>
                         </div>
                         <div className="detail-row">
-                          <span className="detail-label">SềEcâu:</span>
+                          <span className="detail-label">Số câu:</span>
                           <span className="detail-value">
                             {sub.total_questions}
                           </span>
@@ -579,7 +579,7 @@ export function UserMiniTestSubmissions({
                       <th className="table-header-cell">Trạng thái</th>
                       <th className="table-header-cell">Điểm</th>
                       <th className="table-header-cell">Ngày nộp</th>
-                      <th className="table-header-cell">SềEcâu</th>
+                      <th className="table-header-cell">Số câu</th>
                       <th className="table-header-cell">Thao tác</th>
                     </tr>
                   </thead>
