@@ -1,5 +1,5 @@
 // src/components/ExercisePage.tsx
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { NekoLoading } from "./NekoLoading";
 import {
   ArrowLeft,
@@ -88,6 +88,37 @@ export function ExercisePage({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { user: authUser, updateUser, refreshUser } = useAuth();
+
+  // ── Completed exercise tracking ──────────────────────────────────────────
+  // Storage key scoped to the logged-in user (or guest)
+  const storageKey = authUser?.id
+    ? `completed_exercises_${authUser.id}`
+    : "completed_exercises_guest";
+
+  // Lightweight refresh counter — only bumped when a new exercise is marked
+  const [completedRefresh, setCompletedRefresh] = useState(0);
+
+  // Parse localStorage once per storageKey change (or after a mark action)
+  const completedSet = useMemo<Set<string>>(() => {
+    const raw = localStorage.getItem(storageKey);
+    return new Set<string>(raw ? JSON.parse(raw) : []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey, completedRefresh]);
+
+  // Write to localStorage and bump the refresh counter
+  const markExerciseCompleted = useCallback(
+    (exerciseId: string) => {
+      const raw = localStorage.getItem(storageKey);
+      const current: string[] = raw ? JSON.parse(raw) : [];
+      if (!current.includes(exerciseId)) {
+        const updated = [...current, exerciseId];
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+        setCompletedRefresh((prev) => prev + 1);
+      }
+    },
+    [storageKey],
+  );
+  // ────────────────────────────────────────────────────────────────────────
   const isAuthenticated = !!authUser;
 
   // Phân trang danh sách bài tập
@@ -201,6 +232,11 @@ export function ExercisePage({
 
     setScore(correctCount);
     setShowResult(true);
+
+    // Mark this exercise as completed in localStorage
+    if (selectedExercise) {
+      markExerciseCompleted(String(selectedExercise.id));
+    }
 
     toast.success(
       `Nộp bài thành công! Bạn được ${correctCount}/${shuffledQuestions.length} điểm! 🎉`,
@@ -456,7 +492,14 @@ export function ExercisePage({
                         <span className="text-xl">{ex.lessonNumber}</span>
                       </div>
                       <div className="flex-1 text-left">
-                        <h3 className="exercise-card-title">{ex.title}</h3>
+                        <h3 className="exercise-card-title">
+                          {ex.title}
+                          {completedSet.has(String(ex.id)) && (
+                            <span className="text-green-500 text-xs ml-2 font-semibold">
+                              ✓ Đã làm
+                            </span>
+                          )}
+                        </h3>
                         <p className="exercise-card-desc">{ex.description}</p>
                       </div>
                     </div>
