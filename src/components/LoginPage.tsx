@@ -9,21 +9,47 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [backendStatus, setBackendStatus] = useState<"checking" | "waking" | "ready" | "error">("checking");
+  const [countdown, setCountdown] = useState(50);
   const { login } = useAuth();
 
-  // Wake up backend on mount
+  // Wake up backend and track status
   useEffect(() => {
-    const wakeBackend = async () => {
+    let pollInterval: any;
+    let countdownInterval: any;
+
+    const checkHealth = async () => {
       try {
-        await fetch(`${import.meta.env.VITE_API_URL}/health`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/health`, {
           method: "GET",
           cache: "no-cache",
         });
+        if (response.ok) {
+          setBackendStatus("ready");
+          clearInterval(pollInterval);
+        } else {
+          setBackendStatus("waking");
+        }
       } catch (err) {
-        // Ignore wake-up errors
+        setBackendStatus("waking");
       }
     };
-    wakeBackend();
+
+    // Initial check
+    checkHealth();
+
+    // Poll every 5s if not ready
+    pollInterval = setInterval(checkHealth, 5000);
+
+    // Countdown logic
+    countdownInterval = setInterval(() => {
+      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => {
+      clearInterval(pollInterval);
+      clearInterval(countdownInterval);
+    };
   }, []);
 
   const getVietnameseErrorMessage = (error: any): string => {
@@ -137,6 +163,30 @@ export function LoginPage() {
             にゃんこログイン
           </p>
         </div>
+
+        {/* Backend Status Warning */}
+        {backendStatus === "waking" && (
+          <div className="w-full max-w-sm mb-6 animate-fade-in">
+            <div className="bg-yellow-100/80 backdrop-blur-md border-2 border-yellow-400 rounded-2xl p-4 text-center shadow-lg">
+              <p className="text-yellow-800 font-bold mb-1">
+                🐱 Mèo đang gọi máy chủ thức dậy...
+              </p>
+              <p className="text-yellow-700 text-sm">
+                Hệ thống đang khởi động, vui lòng chờ mèo một xíu nhé! ({countdown}s)
+              </p>
+            </div>
+          </div>
+        )}
+
+        {backendStatus === "ready" && countdown < 48 && (
+          <div className="w-full max-w-sm mb-6 animate-fade-in">
+            <div className="bg-green-100/80 backdrop-blur-md border-2 border-green-400 rounded-2xl p-4 text-center shadow-lg">
+              <p className="text-green-800 font-bold">
+                ✨ Máy chủ đã sẵn sàng! Meow!
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Bouncing Neko */}
         <div className="mb-8 animate-bounce-gentle">
