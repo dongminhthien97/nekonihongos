@@ -166,12 +166,12 @@ export function LoginPage() {
 
         {/* Backend Status Warning */}
         {backendStatus === "waking" && (
-          <div className="w-full max-w-sm mb-6 animate-fade-in">
-            <div className="bg-yellow-100/80 backdrop-blur-md border-2 border-yellow-400 rounded-2xl p-4 text-center shadow-lg">
-              <p className="text-yellow-800 font-bold mb-1">
+          <div className="status-container animate-fade-in">
+            <div className="status-card-waking">
+              <p className="status-title-waking">
                 🐱 Mèo đang gọi máy chủ thức dậy...
               </p>
-              <p className="text-yellow-700 text-sm">
+              <p className="status-subtitle-waking">
                 Hệ thống đang khởi động, vui lòng chờ mèo một xíu nhé! ({countdown}s)
               </p>
             </div>
@@ -179,9 +179,9 @@ export function LoginPage() {
         )}
 
         {backendStatus === "ready" && countdown < 48 && (
-          <div className="w-full max-w-sm mb-6 animate-fade-in">
-            <div className="bg-green-100/80 backdrop-blur-md border-2 border-green-400 rounded-2xl p-4 text-center shadow-lg">
-              <p className="text-green-800 font-bold">
+          <div className="status-container animate-fade-in">
+            <div className="status-card-ready">
+              <p className="status-title-ready">
                 ✨ Máy chủ đã sẵn sàng! Meow!
               </p>
             </div>
@@ -842,6 +842,56 @@ export function LoginPage() {
     animation-duration: 1.5s;
   }
     
+  .status-container {
+    width: 100%;
+    max-width: 24rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .status-card-waking {
+    background-color: rgba(254, 249, 195, 0.8);
+    backdrop-filter: blur(12px);
+    border: 2px solid #facc15;
+    border-radius: 1rem;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .status-card-ready {
+    background-color: rgba(220, 252, 231, 0.8);
+    backdrop-filter: blur(12px);
+    border: 2px solid #4ade80;
+    border-radius: 1rem;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .status-title-waking {
+    color: #854d0e;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  .status-title-ready {
+    color: #166534;
+    font-weight: 700;
+  }
+
+  .status-subtitle-waking {
+    color: #a16207;
+    font-size: 0.875rem;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
       `}</style>
     </div>
   );
